@@ -1,0 +1,45 @@
+{
+  "name": "openqa",
+  "version": "0.0.1",
+  "description": "AI-powered Browser automation using playwright mcp",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./claude": "./src/claude-agent.js",
+    "./langchain": "./src/langchain-agent.js"
+  },
+  "keywords": [
+    "claude",
+    "agent",
+    "playwright",
+    "browser-automation",
+    "ai",
+    "testing",
+    "mcp",
+    "shared-context"
+  ],
+  "author": "Gurvinder Dhillon",
+  "homepage": "https://www.auto-browse.com/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/auto-browse/openqa"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "@langchain/anthropic": "^1.0.1",
+    "@langchain/core": "^1.0.2",
+    "@langchain/google-genai": "^1.0.0",
+    "@langchain/langgraph": "^1.0.1",
+    "@langchain/mcp-adapters": "^1.0.0",
+    "@langchain/openai": "^1.0.0",
+    "@playwright/mcp": "^0.0.44",
+    "dotenv": "^17.2.3",
+    "langchain": "^1.0.2",
+    "zod": "^3.25.76"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.56.0"
+  }
+}
