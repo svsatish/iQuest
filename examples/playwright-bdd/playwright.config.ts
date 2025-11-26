@@ -13,7 +13,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: [
-    ['html', { open: 'never' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
   ],
   use: {
     screenshot: 'on',

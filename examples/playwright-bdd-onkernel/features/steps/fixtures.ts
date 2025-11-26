@@ -10,6 +10,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 config({ path: join(__dirname, '../../../../.env') });
 
+/**
+ * OnKernel Browser Fixtures
+ *
+ * This setup connects to OnKernel cloud browsers via Chrome DevTools Protocol (CDP).
+ *
+ * Architecture:
+ * - Reuses OnKernel's default browser context and page
+ * - Efficient: minimal overhead, fast execution
+ * - Parallel execution controlled by 'workers' setting in playwright.config.ts
+ *
+ * Limitations:
+ * - Tests share the same context within a worker (potential state pollution)
+ * - Video/screenshot recording not functional (CDP remote browsers cannot write to local filesystem)
+ * - For full test isolation, use local browsers instead of OnKernel
+ *
+ * Trade-off: Prioritizes cost efficiency and speed over strict test isolation
+ */
+
 type KernelFixtures = {
   kernelBrowser: { browser: Browser; sessionId: string; kernel: Kernel };
   context: BrowserContext;
@@ -23,8 +41,10 @@ export const test = base.extend<KernelFixtures>({
 
     console.log('Creating OnKernel browser...');
     const kernelBrowserInstance = await kernel.browsers.create({
-      headless: true, // Use headless mode for faster execution and lower cost
-    });
+      stealth: true,
+      headless: false,
+      timeout_seconds: 120
+    } as any); // 'as any' needed due to SDK type definition mismatch
     console.log(`OnKernel browser created with session ID: ${kernelBrowserInstance.session_id}`);
 
     // Connect to the kernel browser via CDP
