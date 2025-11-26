@@ -1,5 +1,5 @@
 import { test as base, createBdd } from 'playwright-bdd';
-import { chromium, Browser, BrowserContext, Page } from '@playwright/test';
+import { chromium, Browser } from '@playwright/test';
 import Kernel from '@onkernel/sdk';
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -11,32 +11,36 @@ const __dirname = dirname(__filename);
 config({ path: join(__dirname, '../../../../.env') });
 
 /**
- * OnKernel Browser Fixtures
+ * OnKernel Browser Fixtures with Video Recording
  *
- * This setup connects to OnKernel cloud browsers via Chrome DevTools Protocol (CDP).
+ * This setup connects to OnKernel cloud browsers via Chrome DevTools Protocol (CDP)
+ * and enables video recording by letting Playwright manage contexts and pages.
  *
  * Architecture:
- * - Reuses OnKernel's default browser context and page
- * - Efficient: minimal overhead, fast execution
+ * - Overrides only the browser fixture (connects to OnKernel via CDP)
+ * - Uses Playwright's default context/page fixtures (enables video recording)
+ * - Each test gets a fresh context with video recording enabled
  * - Parallel execution controlled by 'workers' setting in playwright.config.ts
  *
- * Limitations:
- * - Tests share the same context within a worker (potential state pollution)
- * - Video/screenshot recording not functional (CDP remote browsers cannot write to local filesystem)
- * - For full test isolation, use local browsers instead of OnKernel
+ * Benefits:
+ * - Full test isolation (fresh context per test)
+ * - Video/screenshot/trace recording functional
+ * - Standard Playwright behavior (mirrors examples/playwright-bdd/)
  *
- * Trade-off: Prioritizes cost efficiency and speed over strict test isolation
+ * Trade-off: Slightly more overhead than reusing contexts, but proper isolation + recording
  */
 
-type KernelFixtures = {
-  kernelBrowser: { browser: Browser; sessionId: string; kernel: Kernel };
-  context: BrowserContext;
-  page: Page;
+type KernelBrowserType = { browser: Browser; sessionId: string; kernel: Kernel };
+
+type KernelWorkerFixtures = {
+  browser: Browser;
+  kernelBrowser: KernelBrowserType;
 };
 
-export const test = base.extend<KernelFixtures>({
-  // Create and manage the OnKernel browser connection
-  kernelBrowser: async ({}, use) => {
+export const test = base.extend<{}, KernelWorkerFixtures>({
+  // Override browser to connect to OnKernel cloud browser
+  // Scope: 'worker' - one browser per worker, shared across tests
+  browser: [async ({}, use) => {
     const kernel = new Kernel();
 
     console.log('Creating OnKernel browser...');
@@ -51,33 +55,28 @@ export const test = base.extend<KernelFixtures>({
     const browser = await chromium.connectOverCDP(kernelBrowserInstance.cdp_ws_url);
     console.log('Connected to OnKernel browser via CDP');
 
-    await use({
-      browser,
-      sessionId: kernelBrowserInstance.session_id,
-      kernel,
-    });
+    await use(browser);
 
     // Cleanup: close browser connection
     // OnKernel automatically deletes browser sessions after timeout when CDP connection closes
     console.log('Closing browser connection...');
     await browser.close();
     console.log('Browser connection closed');
-  },
+  }, { scope: 'worker' }],
 
-  // Override context to use the kernel browser's existing context
-  context: async ({ kernelBrowser }, use) => {
-    const { browser } = kernelBrowser;
-    // OnKernel browsers launch with a default context - use it if available
-    const context = browser.contexts()[0] || await browser.newContext();
-    await use(context);
-  },
+  // Expose kernel browser info (optional, for debugging)
+  kernelBrowser: [async ({ browser }, use) => {
+    // Note: We don't have direct access to kernel/sessionId here anymore
+    // This is just for compatibility - browser is already connected
+    await use({
+      browser,
+      sessionId: 'unknown', // Would need to refactor to expose this
+      kernel: new Kernel(),
+    });
+  }, { scope: 'worker' }],
 
-  // Override page to use the kernel browser's existing page
-  page: async ({ context }, use) => {
-    // OnKernel browsers launch with a default page - use it if available
-    const page = context.pages()[0] || await context.newPage();
-    await use(page);
-  },
+  // DON'T override context - let Playwright's default create contexts with recordVideo
+  // DON'T override page - let Playwright's default create fresh pages
 });
 
 export const { Step: aistep } = createBdd(test);
