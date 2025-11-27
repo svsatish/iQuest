@@ -88,7 +88,7 @@ npm install openqa
 **Step 3**: Replace step definitions
 ```typescript
 // features/steps/steps.ts
-import 'openqa/bdd/playwright-bdd';
+export { test } from 'openqa/bdd/playwright-bdd';
 ```
 
 **Step 4**: Run tests
@@ -183,7 +183,8 @@ Run AI agent with natural language instruction.
 
 **Playwright-BDD (simple):**
 ```typescript
-import 'openqa/bdd/playwright-bdd';
+// features/steps/steps.ts
+export { test } from 'openqa/bdd/playwright-bdd';
 ```
 
 **Playwright-BDD (custom):**
