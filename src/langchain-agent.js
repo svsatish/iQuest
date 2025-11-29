@@ -146,11 +146,13 @@ async function createPlaywrightTools(browserContext) {
  * @param {boolean} options.returnUsage - Return usage statistics (default: false)
  * @param {number} options.recursionLimit - Maximum recursion depth to prevent infinite loops
  *                                          Priority: options.recursionLimit > RECURSION_LIMIT env var > 100 (default)
+ *                                          NOTE: Must be passed as camelCase 'recursionLimit' to LangGraph config
  * @param {object} options.modelConfig - Additional model configuration
  * @returns {Promise<string|object>} - The final result or result with usage data
  *
  * Environment Variables:
  * - RECURSION_LIMIT: Default recursion limit for all invocations (default: 100)
+ *                    Set higher values (e.g., 200) for complex multi-step tasks
  * - DEFAULT_MODEL: Default model for all providers (overrides hardcoded defaults)
  * - ANTHROPIC_MODEL: Default model for Anthropic (e.g., 'claude-sonnet-4-5')
  * - OPENAI_MODEL: Default model for OpenAI (e.g., 'gpt-4o')
@@ -161,7 +163,20 @@ export async function runLangChainAgent(prompt, browserContext, options = {}) {
   const model = options.model;
   const verbose = options.verbose !== false;
   const returnUsage = options.returnUsage || false;
-  const recursionLimit = options.recursionLimit || parseInt(process.env.RECURSION_LIMIT) || 100;
+  
+  // Parse recursion limit with validation
+  let recursionLimit = 100; // default
+  if (options.recursionLimit) {
+    recursionLimit = options.recursionLimit;
+  } else if (process.env.RECURSION_LIMIT) {
+    const envLimit = parseInt(process.env.RECURSION_LIMIT);
+    if (!isNaN(envLimit) && envLimit > 0) {
+      recursionLimit = envLimit;
+    } else if (verbose) {
+      console.warn(`⚠️  Invalid RECURSION_LIMIT env var: "${process.env.RECURSION_LIMIT}". Using default: 100\n`);
+    }
+  }
+  
   const modelConfig = options.modelConfig || {};
 
   // Track usage for this specific agent call
@@ -231,11 +246,12 @@ export async function runLangChainAgent(prompt, browserContext, options = {}) {
     });
 
     // Configure session for this invocation
+    // IMPORTANT: LangGraph expects 'recursionLimit' in camelCase, not 'recursion_limit'
     const config = {
       configurable: {
         thread_id: sessionData.sessionId
       },
-      recursion_limit: recursionLimit
+      recursionLimit: recursionLimit  // ✅ camelCase required by LangGraph
     };
 
     if (verbose) {

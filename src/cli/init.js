@@ -48,19 +48,19 @@ export async function init(framework, options) {
         message: 'Which testing framework would you like to use?',
         choices: [
           {
-            name: `${FRAMEWORKS['playwright-bdd'].name} - ${FRAMEWORKS['playwright-bdd'].description}`,
-            value: 'playwright-bdd',
-          },
-          {
             name: `${FRAMEWORKS['playwright-yaml'].name} - ${FRAMEWORKS['playwright-yaml'].description}`,
             value: 'playwright-yaml',
+          },
+          {
+            name: `${FRAMEWORKS['playwright-bdd'].name} - ${FRAMEWORKS['playwright-bdd'].description}`,
+            value: 'playwright-bdd',
           },
           {
             name: `${FRAMEWORKS['cucumber'].name} - ${FRAMEWORKS['cucumber'].description}`,
             value: 'cucumber',
           },
         ],
-        default: 'playwright-bdd',
+        default: 'playwright-yaml',
       },
     ]);
     framework = answers.framework;

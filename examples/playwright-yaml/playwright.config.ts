@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
 
-  testDir: './tests',
+  testDir: './.tests-gen',
 // Run tests in files in parallel
   fullyParallel: true,
 
@@ -15,21 +15,19 @@ export default defineConfig({
   // Reporter to use
   reporter: 'html',
 
-  timeout: 120_000,
+  timeout: 180_000,
 
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3000',
+    baseURL: 'https://demo.playwright.dev/todomvc/',
 
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
+    trace: 'on',
 
     // Screenshot on failure
     screenshot: 'on',
-    fullPage: true,
     video: 'on',
-    trace: 'on'
   },
 
   // Configure projects for major browsers

@@ -10,6 +10,7 @@ export default defineConfig({
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
   ],
   use: {
+    baseURL: 'https://demo.playwright.dev/todomvc/',
     screenshot: 'on',
     trace: 'on',
     video: 'on',

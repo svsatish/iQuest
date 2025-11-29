@@ -1,0 +1,16 @@
+{
+  "name": "openqa-cucumber-project",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "cucumber-js --format html:cucumber-test-results/cucumber-report.html",
+    "test:headed": "HEADLESS=false cucumber-js --format html:cucumber-test-results/cucumber-report.html",
+    "test:report": "open cucumber-test-results/cucumber-report.html"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.0.1",
+    "@playwright/test": "^1.57.0",
+    "openqa": "latest",
+    "typescript": "^5.7.2"
+  }
+}

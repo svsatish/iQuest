@@ -37,16 +37,6 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml') {
   // Start describe block
   code += `test.describe('${spec.name}', () => {\n`;
 
-  // Add test.use({ baseURL }) if url is specified
-  if (spec.url) {
-    code += `  test.use({ baseURL: '${spec.url}' });\n\n`;
-  }
-
-  // Add config if present
-  if (spec.config) {
-    code += generateConfig(spec.config);
-  }
-
   // Add hooks if present
   if (spec.hooks) {
     if (spec.hooks.beforeEach) {
@@ -69,37 +59,6 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml') {
 
   // Close describe block
   code += `});\n`;
-
-  return code;
-}
-
-/**
- * Generate config code
- * @param {object} config - Config object from YAML
- * @returns {string} - Generated config code
- */
-function generateConfig(config) {
-  let code = '';
-
-  // Handle baseURL in config (alternative to top-level url)
-  if (config.baseURL && !code.includes('test.use')) {
-    code += `  test.use({ baseURL: '${config.baseURL}' });\n\n`;
-  }
-
-  if (config.timeout || config.retries) {
-    code += `  test.describe.configure({\n`;
-    if (config.timeout) {
-      code += `    timeout: ${config.timeout},\n`;
-    }
-    if (config.retries !== undefined) {
-      code += `    retries: ${config.retries},\n`;
-    }
-    code += `  });\n\n`;
-  }
-
-  if (config.parallel) {
-    code += `  test.describe.parallel();\n\n`;
-  }
 
   return code;
 }

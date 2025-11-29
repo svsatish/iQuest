@@ -27,10 +27,6 @@ export function validateSpec(spec) {
     errors.push('"url" must be a string');
   }
 
-  if (spec.config) {
-    validateConfig(spec.config, errors);
-  }
-
   if (spec.hooks) {
     validateHooks(spec.hooks, errors);
   }
@@ -49,29 +45,6 @@ export function validateSpec(spec) {
   // Throw if any errors
   if (errors.length > 0) {
     throw new Error(`YAML validation failed:\n${errors.map(e => `  - ${e}`).join('\n')}`);
-  }
-}
-
-/**
- * Validate config section
- * @param {object} config - Config object
- * @param {string[]} errors - Array to collect errors
- */
-function validateConfig(config, errors) {
-  if (config.baseURL !== undefined && typeof config.baseURL !== 'string') {
-    errors.push('config.baseURL must be a string');
-  }
-
-  if (config.timeout !== undefined && typeof config.timeout !== 'number') {
-    errors.push('config.timeout must be a number');
-  }
-
-  if (config.retries !== undefined && typeof config.retries !== 'number') {
-    errors.push('config.retries must be a number');
-  }
-
-  if (config.parallel !== undefined && typeof config.parallel !== 'boolean') {
-    errors.push('config.parallel must be a boolean');
   }
 }
 
@@ -200,12 +173,7 @@ export function getSchemaDoc() {
 YAML Test Schema:
 
 name: string              # Test suite name (required)
-url?: string              # Base URL (optional)
-
-config?:                  # Playwright config (optional)
-  timeout?: number        # Test timeout in ms
-  retries?: number        # Number of retries
-  parallel?: boolean      # Run tests in parallel
+url?: string              # Base URL for documentation (optional, configure in playwright.config.ts)
 
 hooks?:                   # Test hooks (optional)
   beforeEach?: string[]   # Steps before each test

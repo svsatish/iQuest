@@ -14,36 +14,38 @@ AI-powered browser automation with shared context using Claude Agent SDK and Pla
 
 ## Quick Start
 
-**New Project (Playwright-BDD or Cucumber.js):**
+**New Project (YAML, Playwright-BDD, or Cucumber.js):**
 
 ```bash
 npx openqa init
 ```
 
 This single command will:
-1. Prompt for framework selection (Playwright-BDD or Cucumber.js)
+1. Prompt for framework selection (YAML, Playwright-BDD, or Cucumber.js)
 2. Install dependencies and Playwright browsers
 3. Prompt for AI provider (Anthropic or Other)
 4. Show tailored setup instructions
 
-Write `.feature` files in plain English - AI handles everything!
+Write tests in YAML or `.feature` files - AI handles everything!
 
-```gherkin
-Feature: Shopping
-  Scenario: Buy a product
-    Given I navigate to "https://shop.example.com"
-    When I search for "laptop" and add the first result to cart
-    And I proceed to checkout and enter shipping details
-    Then I should see "Order confirmed"
+```yaml
+name: Shopping Tests
+tests:
+  - name: Buy a product
+    steps:
+      - Navigate to "https://shop.example.com"
+      - Search for "laptop" and add the first result to cart
+      - Proceed to checkout and enter shipping details
+      - Verify "Order confirmed" appears on the page
 ```
 
 ---
 
 **Integrations with Existing Projects:**
 
+- **[With Existing Playwright](#with-existing-playwright)**
 - **[With Existing Playwright-BDD](#with-existing-playwright-bdd)**
 - **[With Existing Cucumber.js](#with-existing-cucumberjs)**
-- **[With Existing Playwright](#with-existing-playwright)**
 
 ---
 
@@ -232,6 +234,7 @@ import 'openqa/bdd/cucumber';
 
 ## Examples
 
+- [`examples/playwright-yaml/`](examples/playwright-yaml/) - YAML tests with natural language
 - [`examples/playwright/`](examples/playwright/) - Standard Playwright tests
 - [`examples/playwright-bdd-simple/`](examples/playwright-bdd-simple/) - 1-line BDD integration
 - [`examples/playwright-bdd/`](examples/playwright-bdd/) - Manual BDD setup

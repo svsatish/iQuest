@@ -6,13 +6,13 @@
   "scripts": {
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:headed": "playwright test tests/todomvc-tests.spec.js --headed",
+    "test:headed": "playwright test --headed",
     "test:report": "playwright show-report"
   },
   "dependencies": {
     "openqa": "file:../.."
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1"
+    "@playwright/test": "^1.57.0"
   }
 }
