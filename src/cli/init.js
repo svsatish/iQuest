@@ -15,6 +15,12 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Read CLI's own package.json to detect version
+const cliPackageJson = JSON.parse(
+  readFileSync(join(__dirname, '../../package.json'), 'utf-8')
+);
+const cliVersion = cliPackageJson.version;
+
 const FRAMEWORKS = {
   'playwright-bdd': {
     name: 'Playwright-BDD',
@@ -161,7 +167,16 @@ export async function init(framework, options) {
 
   // Install dependencies
   console.log(chalk.cyan('\n📦 Installing dependencies...\n'));
-  const allDeps = [...config.dependencies, ...config.devDependencies];
+  
+  // Auto-detect version: if CLI is beta, install beta; otherwise install latest
+  const openqaVersion = cliVersion.includes('beta') || cliVersion.includes('alpha') || cliVersion.includes('rc')
+    ? `openqa@${cliVersion}`
+    : 'openqa@latest';
+  
+  // Replace 'openqa' in dependencies with the versioned package
+  const allDeps = [...config.dependencies, ...config.devDependencies].map(dep =>
+    dep === 'openqa' ? openqaVersion : dep
+  );
 
   let dependenciesInstalled = false;
   try {
