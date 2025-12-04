@@ -73,6 +73,10 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
     // Check if this context already has a session
     const existingSessionId = contextSessionMap.get(browserContext);
 
+    // Create AbortController to stop query on tool failures
+    const abortController = new AbortController();
+    let toolFailureError = null;
+
     if (existingSessionId && verbose) {
       console.log(`♻️  SESSION: Resuming session: ${existingSessionId}\n`);
     }
@@ -111,17 +115,10 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
       queryOptions.resume = existingSessionId;
     }
 
-    // Add tool error handling hook (similar to langchain-agent.js middleware)
+    // Add tool error handling hook with AbortController
     queryOptions.hooks = {
       PostToolUseFailure: [{
         hooks: [async (input, toolUseID, options) => {
-          // Track this failure to throw after query completes
-          toolFailures.push({
-            tool_name: input.tool_name,
-            error: input.error,
-            tool_input: input.tool_input
-          });
-
           // Log the complete error for analysis (matching langchain-agent.js behavior)
           if (verbose) {
             console.error(`\n❌ TOOL ERROR [${input.tool_name}]:`, {
@@ -136,25 +133,36 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
           // Try to extract cleaner error message from MCP tool error
           // Format: "MCP tool 'tool_name' on server 'server_name' returned an error: ### Result\nError message"
           const match = input.error.match(/MCP tool '.*' on server '.*' returned an error: ### Result\n(.*)/s);
+          const cleanError = match && match[1] ? match[1].trim() : input.error;
 
-          let additionalContext = '';
-          if (match && match[1]) {
-            const cleanError = match[1].trim();
-            additionalContext = `Tool '${input.tool_name}' failed: ${cleanError}`;
-
-            if (verbose) {
-              console.error(`\n📝 Cleaned error message: ${cleanError}\n`);
-            }
+          if (verbose && match && match[1]) {
+            console.error(`\n📝 Cleaned error message: ${cleanError}\n`);
           }
+
+          // Store the error to throw after abort
+          toolFailureError = new Error(`Tool '${input.tool_name}' failed: ${cleanError}`);
+
+          // Abort the query immediately to stop execution
+          if (verbose) {
+            console.error(`🛑 Aborting query due to tool failure\n`);
+          }
+          abortController.abort();
 
           // Return hook output with additional context
           return {
             hookEventName: 'PostToolUseFailure',
-            additionalContext: additionalContext || undefined
+            additionalContext: `Tool '${input.tool_name}' failed: ${cleanError}`
           };
         }]
       }]
     };
+
+    // Add abort signal to query options
+    queryOptions.signal = abortController.signal;
+
+    if (verbose) {
+      console.log('🔧 Query Options Hooks Keys:', Object.keys(queryOptions.hooks));
+    }
 
     const result = query({
       prompt: prompt,
@@ -167,9 +175,36 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
 
     let finalResult = '';
     let currentSessionId = existingSessionId;
-    let toolFailures = [];  // Track tool failures to throw after query completes
 
     for await (const message of result) {
+      // Check for tool errors in user messages (is_error: true)
+      if (message.type === 'user' && message.message && message.message.content) {
+        const toolResults = message.message.content.filter(block => block.type === 'tool_result');
+        for (const toolResult of toolResults) {
+          if (toolResult.is_error) {
+            const errorText = typeof toolResult.content === 'string'
+              ? toolResult.content
+              : Array.isArray(toolResult.content)
+                ? toolResult.content.map(c => c.text).join('\n')
+                : 'Unknown tool error';
+
+            if (verbose) {
+              console.error(`\n❌ TOOL FAILURE:`, errorText);
+              console.error(`🛑 Aborting query due to tool failure\n`);
+            }
+
+            // Store the error to throw after abort
+            toolFailureError = new Error(`Tool execution failed: ${errorText}`);
+
+            // Abort the query
+            abortController.abort();
+
+            // Throw immediately to stop processing
+            throw toolFailureError;
+          }
+        }
+      }
+
       switch (message.type) {
         case 'system':
           if (message.subtype === 'init') {
@@ -217,7 +252,7 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
 
             if (textContent.trim()) {
               console.log('💬 Assistant:', textContent.substring(0, 200) +
-                         (textContent.length > 200 ? '...' : ''));
+                (textContent.length > 200 ? '...' : ''));
               console.log();
             }
           }
@@ -254,17 +289,6 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
       console.log(`└─ Session ID: ${currentSessionId}\n`);
     }
 
-    // Throw if any tool failures occurred (matching langchain-agent.js behavior)
-    if (toolFailures.length > 0) {
-      const firstFailure = toolFailures[0];
-
-      // Try to extract clean error message
-      const match = firstFailure.error.match(/MCP tool '.*' on server '.*' returned an error: ### Result\n(.*)/s);
-      const cleanError = match && match[1] ? match[1].trim() : firstFailure.error;
-
-      throw new Error(`Tool '${firstFailure.tool_name}' failed: ${cleanError}`);
-    }
-
     // Return based on returnUsage option
     if (returnUsage) {
       return {
@@ -279,6 +303,15 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
     return finalResult;
 
   } catch (error) {
+    // If query was aborted due to tool failure, throw the tool error
+    if (error.name === 'AbortError' && toolFailureError) {
+      if (verbose) {
+        console.error('❌ Query aborted due to tool failure:', toolFailureError.message);
+      }
+      throw toolFailureError;
+    }
+
+    // Otherwise, throw the original error
     console.error('❌ Error running Claude agent:', error.message);
     if (verbose && error.stack) {
       console.error('\nStack trace:', error.stack);
@@ -293,7 +326,7 @@ export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
  * @param {BrowserContext} browserContext - The browser context to reset
  * @returns {string|null} - The session ID that was reset, or null if none existed
  */
-runClaudeAgent.resetSession = function(browserContext) {
+runClaudeAgent.resetSession = function (browserContext) {
   const sessionId = contextSessionMap.get(browserContext);
   if (sessionId) {
     contextSessionMap.delete(browserContext);
