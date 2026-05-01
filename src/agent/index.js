@@ -12,7 +12,7 @@ import { LangChainAgent, langChainSessionManager } from './LangChainAgent.js';
  * Run Claude agent with a specific browser context and automatic session management
  * @param {string} prompt - Natural language instruction
  * @param {Page|BrowserContext} pageOrContext - Playwright page or browser context from test
- * @param {object} options - Optional configuration
+ * @param {object} options - Optional configuration (e.g., { maxThinkingTokens: 4000 } to enable extended reasoning in Claude 3.7+ models)
  * @returns {Promise<string>} - The final result
  */
 export async function runClaudeAgent(prompt, pageOrContext, options = {}) {
