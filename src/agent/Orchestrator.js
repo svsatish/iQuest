@@ -154,6 +154,11 @@ socket.on('error', () => process.exit(1));
                             } else if (event.type === 'tool_call') {
                                 stepCount++;
                                 if (this.verbose) this.logger.log(`🔧 Tool Call: ${event.name}(${event.args})`);
+                            } else if (event.type === 'tool_error') {
+                                if (this.verbose) this.logger.log(`❌ Tool Error: ${event.error}`);
+                                const err = new Error(`Tool failed: ${event.error}`);
+                                child.kill(); // Terminate the CLI process early
+                                reject(err); // Fail the BDD step immediately!
                             } else if (event.type === 'result') {
                                 finalResult += event.result + '\n';
                                 if (this.verbose) this.logger.log(`✅ Result: ${event.result}`);
@@ -180,6 +185,10 @@ socket.on('error', () => process.exit(1));
                 }
 
                 const usage = provider.parseSessionUsage?.(fullOutput.join(''));
+
+                if (stepCount === 0) {
+                    return reject(new Error("Agent responded without calling any Playwright MCP tools. The step is considered failed."));
+                }
 
                 if (this.options.returnUsage) {
                     resolve({

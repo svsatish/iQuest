@@ -5,6 +5,7 @@ Feature: TodoMVC Automation
     When I add a new todo item "Buy groceries" on the web page
     Then I should see "Buy fruits" in the todo list
     When I add a new todo item "Buy veggies" on the web page
+    Then I should see "Buy Bananas" in the todo list
 
   Scenario: Filter todos
     Given I navigate to "https://demo.playwright.dev/todomvc/"

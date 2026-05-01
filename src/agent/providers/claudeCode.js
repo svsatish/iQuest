@@ -57,6 +57,28 @@ const parseStreamJsonLine = (line) => {
       }
       return events;
     }
+    if (obj.type === "user" && Array.isArray(obj.message?.content)) {
+      const events = [];
+      for (const block of obj.message.content) {
+        if (block.type === "tool_result" && block.is_error) {
+          let errorText = typeof block.content === 'string'
+              ? block.content
+              : Array.isArray(block.content)
+                  ? block.content.map(c => c.text || JSON.stringify(c)).join('\\n')
+                  : 'Unknown tool error';
+          
+          // Clean up the ### Result prefix if present
+          errorText = errorText.replace(/^### Result\\n/, '').trim();
+          
+          events.push({ 
+            type: "tool_error", 
+            error: errorText, 
+            toolId: block.tool_use_id 
+          });
+        }
+      }
+      return events;
+    }
     if (obj.type === "result" && typeof obj.result === "string") {
       return [{ type: "result", result: obj.result }];
     }
