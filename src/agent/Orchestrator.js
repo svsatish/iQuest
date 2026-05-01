@@ -100,6 +100,7 @@ socket.on('error', () => process.exit(1));
         // 4. Build and spawn the Print Command
         const { command, stdin } = provider.buildPrintCommand({
             prompt: fullPrompt,
+            mcpConfigPath: mcpConfigPath,
             dangerouslySkipPermissions: true, // skip workspace trust prompts in CI/tests
             resumeSession: existingSessionId
         });
@@ -116,7 +117,7 @@ socket.on('error', () => process.exit(1));
 
             // Spawn the subprocess using the shell so that the CLI args parse properly
             const child = spawn(command, {
-                cwd: tempDir, // <-- Run from the temp dir so it natively finds .mcp.json
+                cwd: process.cwd(), // <-- Run from project root so conversation history (.claude) is found!
                 shell: true,
                 stdio: ['pipe', 'pipe', 'inherit']
             });
