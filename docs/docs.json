@@ -25,17 +25,16 @@
             {
                 "group": "Integrations",
                 "pages": [
-                    "integrations/playwright",
                     "integrations/playwright-bdd",
                     "integrations/cucumber",
-                    "integrations/yaml"
+                    "integrations/yaml",
+                    "integrations/playwright"
                 ]
             },
             {
                 "group": "API Reference",
                 "pages": [
-                    "api/run-agent",
-                    "api/step-definitions"
+                    "api/run-agent"
                 ]
             },
             {
