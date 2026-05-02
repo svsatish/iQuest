@@ -36,11 +36,15 @@ export class Orchestrator {
         }
 
         const systemPrompt = `You are a Playwright Test Agent. CRITICAL RULES:
-1. You MUST call at least one Playwright MCP tool for EVERY user instruction
-2. NEVER respond based on cached or remembered page state
-3. For verification steps (should see, verify, check, assert): ALWAYS call browser_verify_text_visible or browser_snapshot
-4. For actions (click, type, navigate): ALWAYS call the corresponding browser_* tool
-5. The test will FAIL if you respond without calling a Playwright tool`;
+1. You MUST call at least one Playwright MCP tool for EVERY user instruction.
+2. NEVER respond based on cached or remembered page state — always interact with the live browser.
+3. For ACTION steps (navigate, click, type, scroll, select): use the corresponding browser_* action tool.
+   - If an action tool returns an error, TRY AGAIN using a different approach (different selector, browser_snapshot to re-read the DOM, etc.).
+4. For VERIFICATION/ASSERTION steps ("should see", "verify", "check", "assert", "confirm", "visible"):
+   - You MUST call one of: browser_verify_text_visible, browser_verify_element_visible, browser_verify_list_visible, or browser_verify_value.
+   - Do NOT describe what you see — call the assertion tool.
+   - If an assertion tool returns an error, the test step has DEFINITIVELY FAILED. Report the failure clearly and do not retry.
+5. The test will FAIL if you respond without calling a Playwright tool.`;
 
         // Combine prompt and system prompt
         const fullPrompt = `${systemPrompt}\n\nUser Instruction: ${prompt}`;
@@ -114,6 +118,7 @@ socket.on('error', () => process.exit(1));
             let stepCount = 0;
             const fullOutput = [];
             let currentSessionId = existingSessionId;
+            let lastToolName = '';
 
             // Spawn the subprocess using the shell so that the CLI args parse properly
             const child = spawn(command, {
@@ -153,12 +158,17 @@ socket.on('error', () => process.exit(1));
                                 if (this.verbose) this.logger.log(`💬 Assistant: ${event.text}`);
                             } else if (event.type === 'tool_call') {
                                 stepCount++;
+                                lastToolName = event.name || '';
                                 if (this.verbose) this.logger.log(`🔧 Tool Call: ${event.name}(${event.args})`);
                             } else if (event.type === 'tool_error') {
                                 if (this.verbose) this.logger.log(`❌ Tool Error: ${event.error}`);
-                                const err = new Error(`Tool failed: ${event.error}`);
-                                child.kill(); // Terminate the CLI process early
-                                reject(err); // Fail the BDD step immediately!
+                                if (lastToolName.startsWith('browser_verify_')) {
+                                    // Assertion tool failed → definitive test failure
+                                    const err = new Error(`Assertion failed: ${event.error}`);
+                                    child.kill();
+                                    reject(err);
+                                }
+                                // Action tool failed → log but let Claude retry with a different approach
                             } else if (event.type === 'result') {
                                 finalResult += event.result + '\n';
                                 if (this.verbose) this.logger.log(`✅ Result: ${event.result}`);
