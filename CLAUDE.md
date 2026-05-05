@@ -132,9 +132,14 @@ if (pageOrContext.context && typeof pageOrContext.context === 'function') {
 
 ### Environment Variable Loading
 
+For local development, no `.env` is needed if you are already logged in:
+- **Claude Code** — uses the existing `claude login` session automatically
+- **OpenCode** — uses the existing `opencode auth login` session (e.g. GitLab Duo) automatically
+
+If the logged-in session is unavailable or you need a specific API key, fall back to:
 1. `.openqa/.env` — loaded by `dotenv`
 2. Parent project `.env` (`../.env`) — fallback for monorepo setups
-3. Shell environment — `ANTHROPIC_API_KEY` (claudeCode) or provider API key (openCode)
+3. Shell environment — `ANTHROPIC_API_KEY` (claudeCode) or the relevant provider key (openCode)
 
 ### Feature File Step Syntax
 
