@@ -64,3 +64,5 @@ examples/playwright-bdd-remote/
 .openqa/
 .playwright-mcp/
 conductor/
+.agents/
+.antigravitycli
