@@ -8,12 +8,7 @@
 
 ## Quick Start
 
-**Prerequisites** — log in with your AI provider once (no API key needed locally):
-
-```bash
-claude login           # Claude Code (Anthropic)
-opencode auth login    # GitHub Copilot, Google Gemini, OpenAI, Amazon Bedrock, and 70+ more
-```
+**Prerequisites** — log in with [Claude Code](https://claude.ai/code) or [opencode](https://opencode.ai) using your model provider (Anthropic, GitHub Copilot, Google Gemini, OpenAI, Amazon Bedrock, and more). No API key needed locally.
 
 **1. Scaffold the harness:**
 ```bash
