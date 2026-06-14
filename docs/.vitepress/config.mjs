@@ -31,7 +31,7 @@ export default defineConfig({
     ],
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2025 Gurvinder Dhillon',
+      copyright: 'Copyright © 2026 Satish Saripella',
     },
     editLink: {
       pattern: 'https://github.com/svsatish/iQuest/edit/main/docs/:path',
