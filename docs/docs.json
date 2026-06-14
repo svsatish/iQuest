@@ -43,21 +43,21 @@
             },
             {
                 "label": "GitHub",
-                "href": "https://github.com/openqa-labs/openqa"
+                "href": "https://github.com/svsatish/iQuest"
             },
             {
                 "label": "npm",
-                "href": "https://www.npmjs.com/package/openqa"
+                "href": "https://www.npmjs.com/package/iquest"
             }
         ],
         "primary": {
             "type": "github",
-            "href": "https://github.com/openqa-labs/openqa"
+            "href": "https://github.com/svsatish/iQuest"
         }
     },
     "footer": {
         "socials": {
-            "github": "https://github.com/openqa-labs/openqa"
+            "github": "https://github.com/svsatish/iQuest"
         }
     },
     "contextual": {

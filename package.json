@@ -33,10 +33,10 @@
     "assure"
   ],
   "author": "Gurvinder Dhillon",
-  "homepage": "https://github.com/openqa-labs/openqa#readme",
+  "homepage": "https://github.com/svsatish/iQuest#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openqa-labs/openqa.git"
+    "url": "git+https://github.com/svsatish/iQuest.git"
   },
   "license": "MIT",
   "files": [

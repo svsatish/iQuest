@@ -34,17 +34,17 @@ jobs:
           tag_name: v${{ steps.package_version.outputs.version }}
           release_name: Release v${{ steps.package_version.outputs.version }}
           body: |
-            ## OpenQA v${{ steps.package_version.outputs.version }}
+            ## iQuest v${{ steps.package_version.outputs.version }}
 
             ### Installation
             ```bash
-            npm install openqa
+            npm install iquest
             ```
 
             ### NPM Package
-            https://www.npmjs.com/package/openqa/v/${{ steps.package_version.outputs.version }}
+            https://www.npmjs.com/package/iquest/v/${{ steps.package_version.outputs.version }}
 
             ### Documentation
-            See [README.md](https://github.com/openqa-labs/openqa#readme) for usage instructions.
+            See [README.md](https://github.com/svsatish/iQuest#readme) for usage instructions.
           draft: false
           prerelease: false

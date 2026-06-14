@@ -397,7 +397,7 @@ Requires `@opencode-ai/sdk` to be installed.
 ## Links
 
 - **NPM:** https://www.npmjs.com/package/iquest
-- **GitHub:** https://github.com/openqa-labs/openqa
+- **GitHub:** https://github.com/svsatish/iQuest
 
 ## License
 

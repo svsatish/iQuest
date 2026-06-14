@@ -6,7 +6,7 @@
    ```bash
    npm search openqa
    ```
-   If "openqa" is taken, you'll need to use a scoped name like `@openqa-labs/openqa`
+   If "iquest" is taken, you'll need to use a scoped name like `@svsatish/iquest`
 
 2. **Login to npm:**
    ```bash
@@ -126,5 +126,5 @@ When releasing new versions:
 
 After publishing, verify:
 - npm package: https://www.npmjs.com/package/openqa
-- GitHub release: https://github.com/openqa-labs/openqa/releases
+- GitHub release: https://github.com/svsatish/iQuest/releases
 - Installation works: `npm install openqa` in a test project
