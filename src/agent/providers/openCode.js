@@ -1,4 +1,3 @@
-import { createOpencode } from '@opencode-ai/sdk';
 import { createServer } from 'net';
 import { PLAYWRIGHT_SYSTEM_PROMPT } from '../systemPrompt.js';
 
@@ -22,7 +21,11 @@ export const openCode = (model = 'anthropic/claude-haiku-4-5', options = {}) => 
     return {
         name: 'opencode',
 
-        async run(prompt, { mcpUrl, existingSessionId, verbose, logger }) {
+        async run(prompt, { mcpUrl, existingSessionId, verbose, logger, systemPrompt = PLAYWRIGHT_SYSTEM_PROMPT }) {
+            const { createOpencode } = await import('@opencode-ai/sdk').catch(() => {
+                throw new Error('Missing optional dependency @opencode-ai/sdk. Install it to use openCode().');
+            });
+
             const port = await getFreePort();
             const { client, server } = await createOpencode({
                 port,
@@ -52,7 +55,7 @@ export const openCode = (model = 'anthropic/claude-haiku-4-5', options = {}) => 
             await client.session.promptAsync({
                 path: { id: sessionId },
                 body: {
-                    system: PLAYWRIGHT_SYSTEM_PROMPT,
+                    system: systemPrompt,
                     parts: [{ type: 'text', text: prompt }],
                     model: { providerID, modelID },
                 },
@@ -92,13 +95,11 @@ export const openCode = (model = 'anthropic/claude-haiku-4-5', options = {}) => 
                             if (part.state.status === 'error') {
                                 const errorText = String(part.state.error ?? 'Unknown tool error');
                                 if (verbose) logger.log(`❌ Tool Error [${part.tool}]: ${errorText}`);
-                                if (part.tool?.includes('browser_verify_')) {
-                                    assertionFailed = true;
-                                    assertionError = errorText;
-                                }
+                                assertionFailed = true;
+                                assertionError = errorText;
                             }
                             // MCP isError:true is surfaced as ToolStateCompleted with error text in output
-                            if (part.state.status === 'completed' && part.tool?.includes('browser_verify_')) {
+                            if (part.state.status === 'completed') {
                                 const output = part.state.output ?? '';
                                 const isErrorOutput = output.startsWith('### Error') ||
                                     (() => { try { return JSON.parse(output)?.isError === true; } catch { return false; } })();

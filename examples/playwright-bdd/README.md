@@ -1,6 +1,6 @@
-# Playwright BDD Example
+# iQuest Playwright-BDD Example
 
-This example demonstrates using `openqa` with Playwright BDD (Behavior-Driven Development) tests written in Gherkin syntax.
+This example demonstrates using `iquest` with Playwright BDD (Behavior-Driven Development) tests written in Gherkin syntax.
 
 ## Setup
 
@@ -70,7 +70,7 @@ Feature: Playwright Home Page
 The key innovation is using a **single generic AI step** that handles ALL steps:
 
 ```typescript
-import { runAgent, claudeCode } from 'openqa';
+import { runAgent, claudeCode } from 'iquest';
 import { aistep } from './fixtures';
 
 // Generic AI-powered step - handles ANY step with natural language

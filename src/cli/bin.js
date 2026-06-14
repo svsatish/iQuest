@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * OpenQA CLI
+ * iQuest CLI
  *
  * Scaffold new BDD projects with AI-powered test automation
  */
@@ -24,13 +24,13 @@ const packageJson = JSON.parse(
 const program = new Command();
 
 program
-  .name('openqa')
-  .description('AI-powered browser automation with OpenQA')
+  .name('iquest')
+  .description('iQuest Agentic Test Harness — AI-powered browser and API automation. Discover. Validate. Assure.')
   .version(packageJson.version);
 
 program
   .command('init [framework]')
-  .description('Initialize a new OpenQA project')
+  .description('Initialize a new iQuest project')
   .option('-d, --dir <directory>', 'Project directory (default: current directory)')
   .action(async (framework, options) => {
     await init(framework, options);

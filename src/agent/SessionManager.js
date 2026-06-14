@@ -25,6 +25,12 @@ export class SessionManager {
                 heldValue.cleanup().catch(() => {}); // Ignore cleanup errors
             }
         });
+
+        /**
+         * WeakMap to store API session state associated with API contexts
+         * Each entry can hold the last request/response and any other per-scenario API state
+         */
+        this.apiStateMap = new WeakMap();
     }
 
     /**
@@ -86,6 +92,35 @@ export class SessionManager {
         this.mcpConnections.delete(browserContext);
 
         return sessionId || null;
+    }
+
+    /**
+     * Get the API state for an API context
+     * @param {object} apiContext
+     * @returns {object|undefined}
+     */
+    getApiState(apiContext) {
+        return this.apiStateMap.get(apiContext);
+    }
+
+    /**
+     * Set or initialize the API state for an API context
+     * @param {object} apiContext
+     * @param {object} state
+     */
+    setApiState(apiContext, state) {
+        this.apiStateMap.set(apiContext, state);
+    }
+
+    /**
+     * Reset the API state for a specific API context
+     * @param {object} apiContext
+     * @returns {object|undefined}
+     */
+    resetApiState(apiContext) {
+        const state = this.apiStateMap.get(apiContext);
+        this.apiStateMap.delete(apiContext);
+        return state;
     }
 }
 

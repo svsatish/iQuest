@@ -1,12 +1,15 @@
 import { test as base, createBdd } from 'playwright-bdd';
+import { Browser } from '@playwright/test';
 
 type Fixtures = {
-  // Add custom fixtures here if needed
+  browser: Browser;
 };
 
 export const test = base.extend<Fixtures>({
-  // Add custom fixture implementations here if needed
+  browser: async ({}, use) => {
+    // Uses Playwright's built-in browser fixture
+    // Browser is only launched when actually used
+  },
 });
 
-//export const { Given, When, Then } = createBdd(test);
 export const { Step: aistep } = createBdd(test);

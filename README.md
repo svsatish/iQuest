@@ -1,9 +1,11 @@
-<img src="docs/assets/logo_light_mode.svg" height="40" alt="OpenQA" />
+<img src="docs/assets/logo_light_mode.svg" height="40" alt="iQuest" />
 
-# OpenQA
-**The open-source agentic testing harness. Write tests in plain English — the agent figures out the selectors.**
+# iQuest Agentic Test Harness
+**Discover. Validate. Assure.**
 
-[![npm version](https://badge.fury.io/js/openqa.svg)](https://www.npmjs.com/package/openqa)
+AI-powered browser and API test automation. Write tests in plain English — the agent figures out the selectors or API calls.
+
+[![npm version](https://badge.fury.io/js/iquest.svg)](https://www.npmjs.com/package/iquest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
@@ -12,10 +14,10 @@
 
 **1. Scaffold the harness:**
 ```bash
-npx openqa init
+npx iquest init
 ```
 
-**2. Write a feature file** (`.openqa/features/my-app.feature`):
+**2. Write a feature file** (`.iquest/features/my-app.feature`):
 ```gherkin
 Feature: My App
 
@@ -27,19 +29,22 @@ Feature: My App
 
 **3. Run:**
 ```bash
-cd .openqa && npm test
+cd .iquest && npm test
 ```
 
 No step definitions. No selectors. No code.
+
+For hybrid UI + API projects, `iquest init` scaffolds a feature-file starter in `.iquest/` that can mix both kinds of steps in the same scenario.
 
 ---
 
 ## Features
 
 - **No selectors. Ever.** — Agent navigates by intent. Survives any UI refactor automatically.
+- **Unified UI + API** — One feature file, one step definition, one `runAgent()` call handles both browser and API steps.
 - **CI-grade evidence** — HTML report, trace viewer, and screenshots on every run.
 - **No API key locally** — Uses your `claude login` or `opencode auth login` session.
-- **2-minute setup** — `npx openqa init` scaffolds the complete harness into your project.
+- **2-minute setup** — `npx iquest init` scaffolds the complete harness into your project.
 - **Dual-engine** — [opencode](https://opencode.ai) (70+ providers) or [Claude Code SDK](https://claude.ai/code). Pick one.
 - **BDD & YAML** — Playwright-BDD, Cucumber.js, or YAML.
 
@@ -49,10 +54,12 @@ No step definitions. No selectors. No code.
 
 ## How It Works
 
-1. Your BDD step definitions call `runAgent(claudeCode('model'), 'natural language step', page)`.
-2. OpenQA creates a Playwright MCP server in-process and exposes it over HTTP/SSE on a random localhost port.
+1. Your BDD step definitions call `runAgent(provider, 'natural language step', context)` where context is a Playwright `page`, `browserContext`, or a Playwright `request` fixture (for API).
+2. iQuest creates a unified MCP server in-process exposing both browser tools and API tools, over HTTP/SSE on a random localhost port.
 3. The chosen AI provider SDK connects to that MCP URL and receives your natural language instruction.
-4. The agent drives the real browser using Playwright MCP tools (`browser_navigate`, `browser_click`, etc.).
+4. The agent decides which toolset to use based on the step content:
+   - **UI steps** ("navigate", "click", "fill", "should see") → Playwright MCP tools
+   - **API steps** ("call GET", "POST /users", "response status is 200", "JSON body has id") → API MCP tools
 5. The step passes or fails based on what the agent reports back.
 
 - **True browser sharing** — the agent drives the exact same page object your test holds.
@@ -64,23 +71,24 @@ No step definitions. No selectors. No code.
 
 ## Environment Variables
 
-The `.openqa/` directory uses [varlock](https://varlock.dev) for environment variable management. Variables are defined in `.env.schema` (committed to git) and values go in `.env` (gitignored). Secrets are automatically redacted from logs.
+The `.iquest/` directory uses [varlock](https://varlock.dev) for environment variable management. Variables are defined in `.env.schema` (committed to git) and values go in `.env` (gitignored). Secrets are automatically redacted from logs.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASE_URL` | — | App URL — sets Playwright `baseURL` and is injected into every agent prompt |
 | `APP_USERNAME` | — | Username — injected into agent prompt for login steps |
 | `APP_PASSWORD` | — | Password — injected into agent prompt; always redacted from logs |
+| `API_TOKEN` | — | API Bearer token — injected into agent prompt for API steps; always redacted |
 | `OPENQA_VERBOSE` | `true` | Set `false` to suppress step-by-step agent logs |
 | `HEADLESS` | `true` | Set `false` to watch the browser |
 | `ANTHROPIC_API_KEY` | — | Anthropic API key — only needed for CI (use `claude login` locally) |
 | `OPENAI_API_KEY` | — | OpenAI API key — only needed for CI via OpenCode |
 | `GOOGLE_API_KEY` | — | Google API key — only needed for CI via OpenCode |
 
-**Adding your own variables** — edit `.openqa/.env.schema` to declare them, then add values to `.env`:
+**Adding your own variables** — edit `.iquest/.env.schema` to declare them, then add values to `.env`:
 
 ```
-# .openqa/.env.schema (add to the bottom)
+# .iquest/.env.schema (add to the bottom)
 
 # @sensitive=false
 ENVIRONMENT = staging
@@ -107,7 +115,7 @@ claude login
 opencode auth login
 ```
 
-For CI (or if you prefer an API key), set the relevant key in `.openqa/.env`:
+For CI (or if you prefer an API key), set the relevant key in `.iquest/.env`:
 
 ```bash
 # Claude Code
@@ -123,12 +131,12 @@ ANTHROPIC_API_KEY=your_key
 
 ## Customizing Your Setup
 
-`openqa init` creates a working starting point — everything in `.openqa/` is yours to edit. Common customizations:
+`iquest init` creates a working starting point — everything in `.iquest/` is yours to edit. Common customizations:
 
-**Playwright config** — `.openqa/playwright.config.ts` is a standard [Playwright config](https://playwright.dev/docs/test-configuration). Add projects, change timeouts, add reporters, enable retries for CI:
+**Playwright config** — `.iquest/playwright.config.ts` is a standard [Playwright config](https://playwright.dev/docs/test-configuration). Add projects, change timeouts, add reporters, enable retries for CI:
 
 ```typescript
-// .openqa/playwright.config.ts
+// .iquest/playwright.config.ts
 export default defineConfig({
   timeout: 120000,
   retries: process.env.CI ? 2 : 0,
@@ -140,10 +148,10 @@ export default defineConfig({
 });
 ```
 
-**Step definitions** — `.openqa/steps/steps.ts` is a regular [Playwright-BDD](https://playwright-bdd.dev) or [Cucumber.js](https://github.com/cucumber/cucumber-js) step file. Add custom (non-AI) steps alongside the AI step, or add Before/After hooks:
+**Step definitions** — `.iquest/steps/steps.ts` is a regular [Playwright-BDD](https://playwright-bdd.dev) or [Cucumber.js](https://github.com/cucumber/cucumber-js) step file. Add custom (non-AI) steps alongside the AI step, or add Before/After hooks:
 
 ```typescript
-// .openqa/steps/steps.ts — add a manual step alongside the AI one
+// .iquest/steps/steps.ts — add a manual step alongside the AI one
 import { createBdd } from 'playwright-bdd';
 const { Given } = createBdd();
 
@@ -156,7 +164,7 @@ Given('I am on the home page', async ({ page }) => {
 
 ## Writing Feature Files
 
-`openqa init` places two example feature files in `.openqa/features/` — `todomvc.feature` (2 scenarios) and `getting-started.feature` (1 scenario). Edit or replace them with your own.
+`iquest init` places example feature files in `.iquest/features/` — edit or replace them with your own.
 
 Feature files use standard Gherkin syntax. We recommend using `*` (asterisk) for steps instead of `Given`/`When`/`Then` — it reads more naturally for AI-driven tests:
 
@@ -178,9 +186,31 @@ Feature: TodoMVC
 
 You can still use `Given`/`When`/`Then` — both work identically.
 
-**Moving feature files elsewhere** — if your feature files live outside `.openqa/` (e.g. `features/` in the project root), update the path in your config:
+### Hybrid UI + API Scenarios
 
-For Playwright-BDD, edit `.openqa/playwright.config.ts`:
+A single scenario can seamlessly mix browser and API steps. The agent automatically selects the right toolset:
+
+```gherkin
+Feature: User registration flow
+
+  Scenario: Register via API, then verify in UI
+    * Call POST "/api/users" with body { "email": "test@example.com", "password": "secret123" }
+    * Verify the response status is 201
+    * Verify the JSON body has "id" equal to a non-empty string
+    * Navigate to "/login"
+    * Fill "email" with "test@example.com"
+    * Fill "password" with "secret123"
+    * Click "Submit"
+    * Should see "Welcome, test@example.com"
+```
+
+**How the agent decides:**
+- Words like "navigate", "click", "fill", "type", "should see", "verify element" → **browser tools**
+- Words like "call GET/POST/PUT/DELETE", "api", "endpoint", "request", "response", "status", "header", "json", "body" → **API tools**
+
+**Moving feature files elsewhere** — if your feature files live outside `.iquest/` (e.g. `features/` in the project root), update the path in your config:
+
+For Playwright-BDD, edit `.iquest/playwright.config.ts`:
 ```typescript
 const testDir = defineBddConfig({
   featuresRoot: '../features',
@@ -189,7 +219,7 @@ const testDir = defineBddConfig({
 });
 ```
 
-For Cucumber.js, edit `.openqa/cucumber.js`:
+For Cucumber.js, edit `.iquest/cucumber.js`:
 ```js
 paths: ['../features/**/*.feature'],
 ```
@@ -198,12 +228,12 @@ paths: ['../features/**/*.feature'],
 
 ## Changing Model or Provider
 
-After running `openqa init`, your model is set in one line inside `.openqa/steps/steps.ts` (or `steps.js` for Cucumber.js). Open that file and edit the provider call:
+After running `iquest init`, your model is set in one line inside `.iquest/steps/steps.ts` (or `steps.js` for Cucumber.js). Open that file and edit the provider call:
 
 **Change the Claude Code model:**
 ```typescript
-// .openqa/steps/steps.ts
-import { runAgent, claudeCode } from 'openqa';
+// .iquest/steps/steps.ts
+import { runAgent, claudeCode } from 'iquest';
 
 // Before
 await runAgent(claudeCode('claude-haiku-4-5'), action, page);
@@ -214,8 +244,8 @@ await runAgent(claudeCode('claude-sonnet-4-6'), action, page);
 
 **Switch from Claude Code to OpenCode (GitLab Duo, GitHub Copilot, etc.):**
 ```typescript
-// .openqa/steps/steps.ts
-import { runAgent, openCode } from 'openqa';  // swap the import
+// .iquest/steps/steps.ts
+import { runAgent, openCode } from 'iquest';  // swap the import
 
 // GitLab Duo
 await runAgent(openCode('gitlab/duo-chat-haiku-4-5'), action, page);
@@ -239,24 +269,79 @@ That's the only change needed — one import swap and one string update.
 
 ## API Reference
 
-### `runAgent(provider, prompt, pageOrContext, options?)`
+### `runAgent(provider, prompt, context, options?)`
 
-Runs the AI agent with a natural language instruction.
+Runs the AI agent with a natural language instruction. Works for both browser (UI) and API testing.
 
 | Parameter | Type | Description |
 |---|---|---|
-| `provider` | `object` | Agent provider, e.g. `claudeCode('claude-haiku-4-5')` |
+| `provider` | `object` | Agent provider, e.g. `claudeCode('claude-haiku-4-5')` or `openCode('gitlab/duo-chat-haiku-4-5')` |
 | `prompt` | `string` | Natural language instruction |
-| `pageOrContext` | `Page \| BrowserContext` | Playwright page or browser context |
+| `context` | `Page \| BrowserContext \| object` | Playwright page, browser context, or API request context/state object |
+| `options.baseUrl` | `string` | Base URL for API requests (when using API context) |
 | `options.verbose` | `boolean` | Enable logging (default: `true`) |
 | `options.returnUsage` | `boolean` | Return token usage stats (default: `false`) |
 
-**Returns:** `Promise<string>` — the agent's final response.
+**Returns:** `Promise<string>` — the agent's final response (or `{ result, usage, steps, sessionId }` if `returnUsage: true`).
+
+**Example — Browser test:**
+```typescript
+import { runAgent, claudeCode } from 'iquest';
+
+await runAgent(
+  claudeCode('claude-haiku-4-5'),
+  'Navigate to "https://example.com" and verify the title contains "Example"',
+  page
+);
+```
+
+**Example — API test:**
+```typescript
+import { test, request } from '@playwright/test';
+import { runAgent, claudeCode } from 'iquest';
+
+test('create user via API', async () => {
+  const api = await request.newContext({
+    baseURL: process.env.BASE_URL,
+  });
+
+  await runAgent(
+    claudeCode('claude-haiku-4-5'),
+    'Create a user with email "test@example.com", then verify status is 201 and response has an id',
+    api,
+    { baseUrl: process.env.BASE_URL }
+  );
+
+  await api.dispose();
+});
+```
+
+**Example — Hybrid test (in BDD step):**
+```typescript
+import { runAgent, openCode } from 'iquest';
+import { aistep } from './fixtures';
+
+aistep(/^(.*)$/, async ({ page, api }, action) => {
+  const isBrowserStep = !/(\bGET\b|\bPOST\b|api|endpoint|request|response|status|header|json|body)/i.test(action);
+  await runAgent(
+    openCode('gitlab/duo-chat-haiku-4-5'),
+    action,
+    isBrowserStep ? page : api,
+    { baseUrl: process.env.BASE_URL }
+  );
+});
+```
+
+### `runAgent.resetSession(context)`
+
+Resets the agent conversation session for a specific context (browser context or API context object). Useful when you want to start a fresh conversation mid-test.
+
+---
 
 ### `claudeCode(model?)`
 
 ```javascript
-import { claudeCode } from 'openqa';
+import { claudeCode } from 'iquest';
 const provider = claudeCode('claude-haiku-4-5'); // default
 ```
 
@@ -271,7 +356,7 @@ Requires `@anthropic-ai/claude-agent-sdk` to be installed.
 ### `openCode(model?)`
 
 ```javascript
-import { openCode } from 'openqa';
+import { openCode } from 'iquest';
 const provider = openCode('gitlab/duo-chat-haiku-4-5'); // GitLab Duo (default in init)
 // or: openCode('github-copilot/gpt-5.4')
 // or: openCode('anthropic/claude-haiku-4-5'), openCode('openai/gpt-4o'), openCode('google/gemini-2.0-flash')
@@ -289,24 +374,21 @@ Model format: `provider/model`. Supports any provider configured in your OpenCod
 
 Requires `@opencode-ai/sdk` to be installed.
 
-### `runAgent.resetSession(browserContext)`
-
-Resets the Claude Code conversation session for a specific browser context. Useful when you want to start a fresh conversation mid-test.
-
 ---
 
 ## Examples
 
 - [`examples/playwright-bdd/`](examples/playwright-bdd/) — Playwright-BDD with natural language steps
 - [`examples/playwright-yaml/`](examples/playwright-yaml/) — YAML-based tests
+- [`examples/playwright-api/`](examples/playwright-api/) — Hybrid UI + API tests (unified approach)
 - [`examples/cucumberjs/`](examples/cucumberjs/) — Cucumber.js integration
 
 ---
 
 ## Requirements
 
-- **openqa library:** Node.js 18+
-- **Scaffolded `.openqa/` project:** Node.js 22+ (required by varlock)
+- **iquest library:** Node.js 18+
+- **Scaffolded `.iquest/` project:** Node.js 22+ (required by varlock)
 - `@playwright/test` ^1.57.0
 - One of: `@anthropic-ai/claude-agent-sdk` (for `claudeCode`) or `@opencode-ai/sdk` (for `openCode`)
 
@@ -314,8 +396,7 @@ Resets the Claude Code conversation session for a specific browser context. Usef
 
 ## Links
 
-- **Website:** https://openqa.io/
-- **NPM:** https://www.npmjs.com/package/openqa
+- **NPM:** https://www.npmjs.com/package/iquest
 - **GitHub:** https://github.com/openqa-labs/openqa
 
 ## License

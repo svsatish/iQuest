@@ -1,4 +1,4 @@
-# OpenQA YAML Tests
+# iQuest YAML Tests
 
 Write Playwright tests in YAML using natural language. No JavaScript required!
 
@@ -113,5 +113,4 @@ cp .env.example .env
 
 ## Learn More
 
-- [OpenQA Documentation](https://openqa.io/)
 - [Playwright Documentation](https://playwright.dev)

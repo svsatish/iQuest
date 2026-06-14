@@ -1,4 +1,4 @@
-# OpenQA Cucumber.js Project
+# iQuest Cucumber.js Project
 
 AI-powered browser automation with Cucumber/Gherkin syntax.
 
@@ -10,9 +10,12 @@ AI-powered browser automation with Cucumber/Gherkin syntax.
    # Option 1: Claude Code (Recommended)
    claude login
 
-   # Option 2: API Key
+   # Option 2: OpenCode (multi-provider)
+   opencode auth login
+
+   # Option 3: API Key
    cp .env.example .env
-   # Edit .env and add your ANTHROPIC_API_KEY
+   # Edit .env and add your ANTHROPIC_API_KEY (or other provider key)
    ```
 
 2. **Run tests**:
@@ -33,12 +36,12 @@ Create `.feature` files in the `features/` directory using Gherkin syntax:
 Feature: My Feature
 
   Scenario: My Scenario
-    Given I navigate to "https://example.com"
-    When I click on the "Sign In" button
-    And I fill in "email" with "test@example.com"
-    And I fill in "password" with "password123"
-    And I click the "Login" button
-    Then I should see "Welcome back!" on the page
+    * Navigate to "https://example.com"
+    * Click on the "Sign In" button
+    * Fill in "email" with "test@example.com"
+    * Fill in "password" with "password123"
+    * Click the "Login" button
+    * Should see "Welcome back!" on the page
 ```
 
 The AI agent automatically handles all steps - no code required!
@@ -46,5 +49,4 @@ Browser setup and teardown is handled automatically.
 
 ## Learn More
 
-- [OpenQA Documentation](https://openqa.io/)
 - [Cucumber.js Documentation](https://github.com/cucumber/cucumber-js)

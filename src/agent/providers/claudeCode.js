@@ -1,10 +1,13 @@
-import { query } from '@anthropic-ai/claude-agent-sdk';
 import { PLAYWRIGHT_SYSTEM_PROMPT } from '../systemPrompt.js';
 
 export const claudeCode = (model = 'claude-haiku-4-5', options = {}) => ({
     name: 'claude-code',
 
-    async run(prompt, { mcpUrl, existingSessionId, verbose, logger }) {
+    async run(prompt, { mcpUrl, existingSessionId, verbose, logger, systemPrompt = PLAYWRIGHT_SYSTEM_PROMPT }) {
+        const { query } = await import('@anthropic-ai/claude-agent-sdk').catch(() => {
+            throw new Error('Missing optional dependency @anthropic-ai/claude-agent-sdk. Install it to use claudeCode().');
+        });
+
         let stepCount = 0;
         let finalResult = '';
         let assertionFailed = false;
@@ -38,7 +41,7 @@ export const claudeCode = (model = 'claude-haiku-4-5', options = {}) => ({
                 mcpServers: {
                     playwright: { type: 'http', url: mcpUrl },
                 },
-                systemPrompt: PLAYWRIGHT_SYSTEM_PROMPT,
+                systemPrompt,
                 permissionMode: 'bypassPermissions',
                 resume: existingSessionId,
                 hooks: {
@@ -83,10 +86,8 @@ export const claudeCode = (model = 'claude-haiku-4-5', options = {}) => ({
 
                         if (verbose) logger.log(`❌ Tool Error [${toolName}]: ${errorText}`);
 
-                        if (toolName.includes('browser_verify_')) {
-                            assertionFailed = true;
-                            assertionError = errorText;
-                        }
+                        assertionFailed = true;
+                        assertionError = errorText;
                     }
                 }
             }

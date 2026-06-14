@@ -1,7 +1,7 @@
 /**
- * OpenQA Init Command
+ * iQuest Init Command
  *
- * Scaffolds a new BDD project with OpenQA integration into a .openqa directory
+ * Scaffolds a new BDD project with iQuest integration into a .iquest directory
  */
 
 import * as clack from '@clack/prompts';
@@ -30,15 +30,21 @@ const cliVersion = cliPackageJson.version;
 const FRAMEWORKS = {
   'playwright-bdd': {
     name: 'Playwright-BDD',
-    description: 'Playwright with Gherkin/Cucumber syntax',
-    dependencies: ['openqa', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
+    description: 'Playwright with Gherkin/Cucumber syntax (recommended)',
+    dependencies: ['iquest', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: ['@cucumber/cucumber'],
   },
   'cucumber': {
     name: 'Cucumber.js',
     description: 'Standalone Cucumber with Playwright',
-    dependencies: ['openqa', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
+    dependencies: ['iquest', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: [],
+  },
+  'api': {
+    name: 'Playwright Hybrid BDD',
+    description: 'Plain-English hybrid UI + API tests with Playwright BDD',
+    dependencies: ['iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', 'typescript', 'varlock'],
+    devDependencies: ['@playwright/test'],
   },
 };
 
@@ -50,51 +56,19 @@ const CLAUDE_CODE_MODELS = [
 ];
 
 const OPENCODE_MODELS = [
-  { value: 'gitlab/duo-chat-haiku-4-5',     label: 'gitlab/duo-chat-haiku-4-5 (Default — GitLab Duo)' },
-  { value: 'github-copilot/gpt-5.4',        label: 'github-copilot/gpt-5.4 (GitHub Copilot)' },
-  { value: 'anthropic/claude-haiku-4-5',    label: 'anthropic/claude-haiku-4-5' },
-  { value: 'anthropic/claude-sonnet-4-6',   label: 'anthropic/claude-sonnet-4-6' },
-  { value: 'openai/gpt-4o',                 label: 'openai/gpt-4o' },
-  { value: 'google/gemini-2.0-flash',       label: 'google/gemini-2.0-flash' },
-  { value: 'custom',                         label: 'Custom (enter manually — format: provider/model)' },
+  { value: 'gitlab/duo-chat-haiku-4-5', label: 'gitlab/duo-chat-haiku-4-5 (Default — GitLab Duo)' },
+  { value: 'github-copilot/gpt-5.4', label: 'github-copilot/gpt-5.4 (GitHub Copilot)' },
+  { value: 'anthropic/claude-haiku-4-5', label: 'anthropic/claude-haiku-4-5' },
+  { value: 'anthropic/claude-sonnet-4-6', label: 'anthropic/claude-sonnet-4-6' },
+  { value: 'openai/gpt-4o', label: 'openai/gpt-4o' },
+  { value: 'google/gemini-2.0-flash', label: 'google/gemini-2.0-flash' },
+  { value: 'custom', label: 'Custom (enter manually — format: provider/model)' },
 ];
 
 export async function init(cliFramework, options) {
-  clack.intro(chalk.bgCyan.black(' 🤖 OpenQA Initialization '));
+  clack.intro(chalk.bgCyan.black(' 🤖 iQuest Agentic Test Harness Initialization '));
 
-  const targetDir = resolve(process.cwd(), '.openqa');
-
-  // Agent Selection
-  const agent = await clack.select({
-    message: 'Which AI agent would you like to use?',
-    options: [
-      { value: 'claudeCode', label: 'Claude Code (Anthropic SDK)' },
-      { value: 'openCode',   label: 'OpenCode (multi-provider — Anthropic, OpenAI, Google, …)' },
-    ],
-  });
-  if (clack.isCancel(agent)) return clack.cancel('Operation cancelled.');
-
-  // Model Selection — options differ by agent
-  const modelOptions = agent === 'openCode' ? OPENCODE_MODELS : CLAUDE_CODE_MODELS;
-  let model = await clack.select({
-    message: 'Which model would you like to use?',
-    options: modelOptions,
-  });
-  if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-
-  if (model === 'custom') {
-    const placeholder = agent === 'openCode'
-      ? 'e.g. anthropic/claude-3-5-sonnet-20241022'
-      : 'e.g. claude-3-5-sonnet-20241022';
-    model = await clack.text({
-      message: 'Enter the model name manually:',
-      placeholder,
-      validate: (value) => {
-        if (!value) return 'Please enter a model name.';
-      }
-    });
-    if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-  }
+  const targetDir = resolve(process.cwd(), '.iquest');
 
   // Framework Selection
   let framework = cliFramework;
@@ -104,30 +78,87 @@ export async function init(cliFramework, options) {
       options: [
         { value: 'playwright-bdd', label: 'Playwright-BDD' },
         { value: 'cucumber', label: 'CucumberJS' },
+        { value: 'api', label: 'Playwright Hybrid (UI + API)' },
       ],
     });
     if (clack.isCancel(framework)) return clack.cancel('Operation cancelled.');
   }
 
-  // Feature files path
-  let featuresPath = await clack.text({
-    message: 'Where should feature files live? (path relative to .openqa/)',
+  // Agent and model selection
+  let agent;
+  let model;
+  if (framework === 'api') {
+    agent = 'openCode';
+    model = await clack.select({
+      message: 'Which OpenCode model would you like to use?',
+      options: OPENCODE_MODELS,
+    });
+    if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
+
+    if (model === 'custom') {
+      model = await clack.text({
+        message: 'Enter the model name manually:',
+        placeholder: 'e.g. anthropic/claude-3-5-sonnet-20241022',
+        validate: (value) => {
+          if (!value) return 'Please enter a model name.';
+        }
+      });
+      if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
+    }
+  } else {
+    agent = await clack.select({
+      message: 'Which AI agent would you like to use?',
+      options: [
+        { value: 'claudeCode', label: 'Claude Code (Anthropic SDK)' },
+        { value: 'openCode', label: 'OpenCode (multi-provider — Anthropic, OpenAI, Google, …)' },
+      ],
+    });
+    if (clack.isCancel(agent)) return clack.cancel('Operation cancelled.');
+
+    const modelOptions = agent === 'openCode' ? OPENCODE_MODELS : CLAUDE_CODE_MODELS;
+    model = await clack.select({
+      message: 'Which model would you like to use?',
+      options: modelOptions,
+    });
+    if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
+
+    if (model === 'custom') {
+      const placeholder = agent === 'openCode'
+        ? 'e.g. anthropic/claude-3-5-sonnet-20241022'
+        : 'e.g. claude-3-5-sonnet-20241022';
+      model = await clack.text({
+        message: 'Enter the model name manually:',
+        placeholder,
+        validate: (value) => {
+          if (!value) return 'Please enter a model name.';
+        }
+      });
+      if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
+    }
+  }
+
+  // Feature or test files path
+  const pathPrompt = framework === 'api'
+    ? 'Where should hybrid feature files live? (path relative to .iquest/)'
+    : 'Where should feature files live? (path relative to .iquest/)';
+  let sourcePath = await clack.text({
+    message: pathPrompt,
     initialValue: 'features',
     placeholder: 'features',
-    hint: 'Use ../path/to/features to point outside .openqa/',
+    hint: 'Use ../path/to/files to point outside .iquest/',
   });
-  if (clack.isCancel(featuresPath)) return clack.cancel('Operation cancelled.');
+  if (clack.isCancel(sourcePath)) return clack.cancel('Operation cancelled.');
 
   // Normalize path format
-  if (featuresPath.endsWith('/')) featuresPath = featuresPath.slice(0, -1);
-  if (featuresPath.startsWith('./')) featuresPath = featuresPath.slice(2);
+  if (sourcePath.endsWith('/')) sourcePath = sourcePath.slice(0, -1);
+  if (sourcePath.startsWith('./')) sourcePath = sourcePath.slice(2);
 
   // Check if directory exists
   if (existsSync(targetDir)) {
     const files = readdirSync(targetDir);
     if (files.length > 0 && !files.every(f => f.startsWith('.'))) {
       const confirmOverride = await clack.confirm({
-        message: `Directory .openqa is not empty. Overwrite and re-initialize?`,
+        message: `Directory .iquest is not empty. Overwrite and re-initialize?`,
         initialValue: false,
       });
       if (clack.isCancel(confirmOverride) || !confirmOverride) {
@@ -139,7 +170,7 @@ export async function init(cliFramework, options) {
   }
 
   const spinner = clack.spinner();
-  spinner.start(`Scaffolding ${FRAMEWORKS[framework].name} into .openqa...`);
+  spinner.start(`Scaffolding ${FRAMEWORKS[framework].name} into .iquest...`);
 
   const templateDir = join(__dirname, 'templates', framework);
 
@@ -147,12 +178,12 @@ export async function init(cliFramework, options) {
     spinner.message('Copying template files...');
     const toCopy = ['gitignore', 'package.json', 'README.md', '.env.example', '.env.schema'];
 
-    if (framework === 'playwright-bdd') {
+    if (framework === 'playwright-bdd' || framework === 'api') {
       toCopy.push('playwright.config.ts');
       mkdirSync(join(targetDir, 'steps'), { recursive: true });
       cpSync(join(templateDir, 'features/steps/fixtures.ts'), join(targetDir, 'steps/fixtures.ts'));
       cpSync(join(templateDir, 'features/steps/steps.ts'), join(targetDir, 'steps/steps.ts'));
-      // Copy example feature files into .openqa/features/
+      // Copy example feature files into .iquest/features/
       mkdirSync(join(targetDir, 'features'), { recursive: true });
       const featureFiles = readdirSync(join(templateDir, 'features')).filter(f => f.endsWith('.feature'));
       for (const f of featureFiles) {
@@ -162,7 +193,7 @@ export async function init(cliFramework, options) {
       toCopy.push('cucumber.js');
       mkdirSync(join(targetDir, 'steps'), { recursive: true });
       cpSync(join(templateDir, 'features/step_definitions/steps.js'), join(targetDir, 'steps/steps.js'));
-      // Copy example feature files into .openqa/features/
+      // Copy example feature files into .iquest/features/
       mkdirSync(join(targetDir, 'features'), { recursive: true });
       const featureFiles = readdirSync(join(templateDir, 'features')).filter(f => f.endsWith('.feature'));
       for (const f of featureFiles) {
@@ -179,11 +210,11 @@ export async function init(cliFramework, options) {
     spinner.message('Configuring paths...');
 
     // Rewrite configuration files with the chosen features path
-    if (framework === 'playwright-bdd') {
+    if (framework === 'playwright-bdd' || framework === 'api') {
       const pConfigPath = join(targetDir, 'playwright.config.ts');
       let content = readFileSync(pConfigPath, 'utf8');
-      content = content.replace("featuresRoot: 'features'", `featuresRoot: '${featuresPath}'`);
-      content = content.replace("features: 'features/**/*.feature'", `features: '${featuresPath}/**/*.feature'`);
+      content = content.replace("featuresRoot: 'features'", `featuresRoot: '${sourcePath}'`);
+      content = content.replace("features: 'features/**/*.feature'", `features: '${sourcePath}/**/*.feature'`);
       content = content.replace("'features/steps/*.ts'", `'steps/*.ts'`);
       writeFileSync(pConfigPath, content);
     }
@@ -191,12 +222,12 @@ export async function init(cliFramework, options) {
     if (framework === 'cucumber') {
       const cConfigPath = join(targetDir, 'cucumber.js');
       let content = readFileSync(cConfigPath, 'utf8');
-      content = content.replace("'features/**/*.feature'", `'${featuresPath}/**/*.feature'`);
+      content = content.replace("'features/**/*.feature'", `'${sourcePath}/**/*.feature'`);
       content = content.replace("'features/step_definitions/**/*.js'", `'steps/**/*.js'`);
       writeFileSync(cConfigPath, content);
     }
 
-    spinner.message('Configuring step definitions...');
+    spinner.message(framework === 'api' ? 'Configuring hybrid step definitions...' : 'Configuring step definitions...');
 
     // Rewrite steps file: swap provider factory and model
     const stepsPath = framework === 'playwright-bdd'
@@ -209,8 +240,8 @@ export async function init(cliFramework, options) {
       if (agent === 'openCode') {
         // Swap import: claudeCode → openCode
         content = content.replace(
-          /import\s*\{([^}]*)\}\s*from\s*['"]openqa['"]/,
-          (_, imports) => `import { ${imports.replace('claudeCode', 'openCode')} } from 'openqa'`
+          /import\s*\{([^}]*)\}\s*from\s*['"]iquest['"]/,
+          (_, imports) => `import { ${imports.replace('claudeCode', 'openCode')} } from 'iquest'`
         );
         // Swap provider call
         content = content.replace(/claudeCode\(['"][^'"]*['"]\)/g, `openCode('${model}')`);
@@ -226,12 +257,19 @@ export async function init(cliFramework, options) {
     const packageJsonPath = join(targetDir, 'package.json');
     if (existsSync(packageJsonPath)) {
       const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-      if (framework === 'playwright-bdd') {
+      if (framework === 'playwright-bdd' || framework === 'api') {
         pkg.scripts = {
           bddgen: 'bddgen',
           test: 'npm run bddgen && playwright test',
           'test:ui': 'npm run bddgen && playwright test --ui',
           'test:headed': 'npm run bddgen && playwright test --headed',
+          'test:report': 'playwright show-report'
+        };
+      } else if (framework === 'api') {
+        pkg.scripts = {
+          test: 'playwright test',
+          'test:ui': 'playwright test --ui',
+          'test:headed': 'playwright test --headed',
           'test:report': 'playwright show-report'
         };
       } else {
@@ -257,8 +295,8 @@ export async function init(cliFramework, options) {
 
   const frameworkConfig = FRAMEWORKS[framework];
   const openqaVersion = cliVersion.includes('beta') || cliVersion.includes('alpha') || cliVersion.includes('rc')
-    ? `openqa@${cliVersion}`
-    : 'openqa@latest';
+    ? `iquest@${cliVersion}`
+    : 'iquest@latest';
 
   // Add the chosen agent SDK as a dependency
   const agentSdk = agent === 'openCode'
@@ -266,7 +304,7 @@ export async function init(cliFramework, options) {
     : '@anthropic-ai/claude-agent-sdk';
 
   const allDeps = [...frameworkConfig.dependencies, ...frameworkConfig.devDependencies, agentSdk].map(dep =>
-    dep === 'openqa' ? openqaVersion : dep
+    dep === 'iquest' ? openqaVersion : dep
   );
 
   let dependenciesInstalled = false;
@@ -276,7 +314,7 @@ export async function init(cliFramework, options) {
     dependenciesInstalled = true;
   } catch (error) {
     installSpinner.stop('❌ Error installing dependencies');
-    console.error(chalk.red('You will need to run `npm install` manually inside .openqa'));
+    console.error(chalk.red('You will need to run `npm install` manually inside .iquest'));
   }
 
   // Install Browsers
@@ -305,14 +343,18 @@ export async function init(cliFramework, options) {
     ? `   Local (no API key needed): opencode auth login\n   CI / API key:               add provider key to .env (e.g. ANTHROPIC_API_KEY)`
     : `   Local (no API key needed): claude login\n   CI / API key:               add ANTHROPIC_API_KEY to .env`;
 
+  const nextStepRun = framework === 'api'
+    ? 'npm test'
+    : 'npm run test:headed';
+
   clack.note(
-    `1. cd .openqa\n` +
+    `1. cd .iquest\n` +
     `2. cp .env.example .env\n` +
     `3. Authenticate:\n` +
     localAuthNote + `\n` +
-    `4. npm run test:headed`,
+    `4. ${nextStepRun}`,
     'Next Steps'
   );
 
-  clack.outro(chalk.bold.green('🎉 .openqa scaffolding complete!'));
+  clack.outro(chalk.bold.green('🎉 .iquest scaffolding complete! Discover. Validate. Assure.'));
 }

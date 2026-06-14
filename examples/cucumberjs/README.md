@@ -1,6 +1,6 @@
-# CucumberJS Example
+# iQuest Cucumber.js Example
 
-This example demonstrates using `autobrowse-agent` with CucumberJS and Playwright for BDD testing.
+This example demonstrates using `iquest` with CucumberJS and Playwright for BDD testing.
 
 ## Setup
 
@@ -16,14 +16,8 @@ cp .env.example .env
 
 3. Edit `.env` and add your API key:
 ```env
-# Choose your agent type
-AGENT_TYPE=langchain
-
-# Add your API key
+# Add your API key (not needed if using claude login or opencode auth login)
 ANTHROPIC_API_KEY=your_api_key_here
-
-# Optional: Increase recursion limit for complex scenarios
-RECURSION_LIMIT=100
 ```
 
 ## Run Tests
@@ -73,7 +67,7 @@ The key innovation is using a **single generic step** that handles ALL steps wit
 ```javascript
 import { defineStep, Before, After } from '@cucumber/cucumber';
 import { chromium } from 'playwright';
-import { runAgent, claudeCode } from 'openqa';
+import { runAgent, claudeCode } from 'iquest';
 
 Before(async function () {
   browser = await chromium.launch({ headless: true });
@@ -125,45 +119,3 @@ The report includes:
 - Scenario pass/fail status
 - Step-by-step execution details
 - Execution time
-
-## Configuration
-
-### Cucumber Configuration
-
-The `cucumber.js` file configures:
-- Feature file paths
-- Step definition paths
-- Report formats and output
-- Default settings
-
-### Agent Configuration
-
-Configure the AI agent via environment variables in `.env`:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AGENT_TYPE` | Agent implementation: `claude` or `langchain` | `claude` |
-| `DEFAULT_PROVIDER` | AI provider for langchain: `anthropic`, `openai`, or `google` | `anthropic` |
-| `RECURSION_LIMIT` | Maximum steps for complex scenarios | `100` |
-| `ANTHROPIC_API_KEY` | API key for Claude models | - |
-| `OPENAI_API_KEY` | API key for GPT models | - |
-| `GOOGLE_API_KEY` | API key for Gemini models | - |
-
-**Recursion Limit**: If you encounter "GraphRecursionError: Recursion limit of 25 reached", increase the `RECURSION_LIMIT` environment variable:
-
-```env
-# For complex multi-step scenarios
-RECURSION_LIMIT=150
-```
-
-The recursion limit controls how many agent steps can be executed. Complex browser automation tasks may require higher limits.
-
-## Differences from playwright-bdd
-
-Unlike the playwright-bdd example, this uses:
-- Vanilla CucumberJS (not playwright-bdd wrapper)
-- Manual browser setup in Before/After hooks
-- Direct Playwright API usage
-- Standard Cucumber configuration
-
-Both approaches are valid - choose based on your team's preference and existing setup.

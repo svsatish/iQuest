@@ -1,15 +1,16 @@
 {
-  "name": "openqa",
+  "name": "iquest",
   "version": "0.0.10",
-  "description": "Agent Harness for Browser Test Automation — write tests in natural language, powered by Claude Code or OpenCode",
+  "description": "iQuest Agentic Test Harness — AI-powered browser and API test automation. Write tests in plain English. Discover. Validate. Assure.",
   "type": "module",
   "bin": {
-    "openqa": "src/cli/bin.js"
+    "iquest": "src/cli/bin.js"
   },
   "exports": {
     ".": "./src/index.js"
   },
   "keywords": [
+    "iquest",
     "agentic-testing",
     "agentic-engineering",
     "agent-harness",
@@ -20,15 +21,19 @@
     "browser-automation",
     "ai",
     "testing",
+    "api-testing",
     "mcp",
     "shared-context",
     "bdd",
     "cucumber",
     "gherkin",
-    "behavior-driven-development"
+    "behavior-driven-development",
+    "discover",
+    "validate",
+    "assure"
   ],
   "author": "Gurvinder Dhillon",
-  "homepage": "https://openqa.io/",
+  "homepage": "https://github.com/openqa-labs/openqa#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/openqa-labs/openqa.git"
@@ -70,11 +75,17 @@
       "optional": true
     }
   },
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.126",
     "@cucumber/cucumber": "^12.2.0",
     "@opencode-ai/sdk": "^1.14.33",
     "playwright-bdd": "^8.4.1",
+    "vitepress": "^1.6.4",
     "zod": "^4.4.2"
   }
 }

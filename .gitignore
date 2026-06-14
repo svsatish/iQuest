@@ -70,3 +70,4 @@ examples/playwright-bdd-remote/
 .playwright-mcp/
 conductor/
 .antigravitycli
+.kimchi/

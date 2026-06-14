@@ -1,11 +1,33 @@
-import { expect } from '@playwright/test';
-import { runAgent, claudeCode } from 'openqa';
-//import { Given, When, Then } from './fixtures';
+import { runAgent, openCode } from 'iquest';
 import { aistep } from './fixtures';
 
+const verbose = process.env.OPENQA_VERBOSE !== 'false';
+
+// Cache for lazily created pages - shared within a scenario
+const pageCache = new Map<string, import('@playwright/test').Page>();
+
 // Generic AI step - handles ALL Given/When/Then steps with natural language
-// Uses agent configured via AGENT_TYPE env var or defaults to 'claude'
-aistep(/^(.*)$/, async ({ page, context }, action: string) => {
-    console.log(`Executing AI step: ${action}`);
-    await runAgent(claudeCode('claude-haiku-4-5'), action, page, { verbose: true });
+aistep(/^(.*)$/, async ({ browser }, action: string) => {
+    // Lazily create page only when needed
+    const workerId = process.env.TEST_WORKER_INDEX || 'default';
+    let page = pageCache.get(workerId);
+    if (!page) {
+        page = await browser.newPage();
+        pageCache.set(workerId, page);
+    }
+
+    if (verbose) {
+        console.log(`🤖 [UI] ${action}`);
+    }
+    await runAgent(openCode('opencode/nemotron-3-ultra-free'), action, page, { verbose });
+});
+
+// Clean up cached pages after each scenario
+import { After } from 'playwright-bdd';
+
+After(async () => {
+    for (const page of pageCache.values()) {
+        await page.close().catch(() => {});
+    }
+    pageCache.clear();
 });
