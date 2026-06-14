@@ -6,7 +6,7 @@ hero:
   text: Agentic Test Harness
   tagline: Discover · Validate · Assure
   image:
-    src: /hero-illustration.svg
+    src: /hero_image.png
     alt: iQuest architecture — AI agent orchestrating browser and API testing
   actions:
     - theme: brand

@@ -3,6 +3,27 @@
   text-align: center;
 }
 
+/* Hero image sizing and alignment */
+.VPHomeHero .image-src {
+  max-width: 80%;
+  width: auto;
+  height: auto;
+  max-height: 400px;
+  margin: 2rem auto 1.5rem;
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 768px) {
+  .VPHomeHero .image-src {
+    max-width: 95%;
+    max-height: 280px;
+    margin: 1.5rem auto 1rem;
+    border-radius: 12px;
+  }
+}
+
 .VPHomeHero .name {
   font-size: 3rem;
   font-weight: 700;
