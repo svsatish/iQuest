@@ -1,0 +1,145 @@
+/* Center hero content and improve spacing */
+.VPHomeHero {
+  text-align: center;
+}
+
+.VPHomeHero .name {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.VPHomeHero .text {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+  margin: 0.5rem 0 1rem;
+}
+
+.VPHomeHero .tagline {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--vp-c-brand-1);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 2.5rem;
+}
+
+.VPHomeHero .actions {
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.VPHomeHero .action {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.VPHomeHero .action:hover {
+  transform: translateY(-2px);
+}
+
+/* Improve feature grid - center and constrain width */
+.VPFeatures {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.VPFeatures .container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.VPFeature {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.VPFeature:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.VPFeature .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.VPFeature h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: var(--vp-c-text-1);
+}
+
+.VPFeature p {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--vp-c-text-2);
+}
+
+/* Better spacing for sections after hero */
+.VPDoc > .container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-top: 3rem;
+  padding-bottom: 4rem;
+}
+
+.VPDoc h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.VPDoc h3 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.VPDoc p {
+  line-height: 1.8;
+  color: var(--vp-c-text-2);
+}
+
+.VPDoc pre {
+  border-radius: 10px;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.VPDoc code {
+  font-size: 0.95rem;
+}
+
+/* Center the "All You Need to Write" section */
+.VPDoc > .container > :first-child {
+  text-align: center;
+}
+
+/* Make code blocks look better */
+.VPDoc pre code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Quick links centered */
+.VPDoc ul {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding-left: 1.5rem;
+}
+
+.VPDoc li {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}

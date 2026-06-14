@@ -7,6 +7,7 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', href: '/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#EB521E' }],
+    ['link', { rel: 'stylesheet', href: '/custom.css' }],
   ],
   themeConfig: {
     logo: '/logo_light_mode.svg',

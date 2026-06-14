@@ -5,6 +5,9 @@ hero:
   name: iQuest
   text: Agentic Test Harness
   tagline: Discover · Validate · Assure
+  image:
+    src: /hero-illustration.svg
+    alt: iQuest architecture — AI agent orchestrating browser and API testing
   actions:
     - theme: brand
       text: Quickstart
@@ -69,62 +72,3 @@ That's it. No step definitions. No selectors. No code.
 - [How It Works](/how-it-works) — Architecture and design decisions
 - [GitHub](https://github.com/svsatish/iQuest) — Source code and examples
 - [npm](https://www.npmjs.com/package/iquest) — Package on npm
-
-<style>
-/* Center hero content and improve spacing */
-.VPHomeHero {
-  text-align: center;
-}
-
-.VPHomeHero .text {
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.VPHomeHero .tagline {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: var(--vp-c-brand-1);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 2rem;
-}
-
-.VPHomeHero .actions {
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* Improve feature grid */
-.VPFeatures {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.VPFeature {
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.VPFeature:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* Better spacing for sections after hero */
-.VPDoc > .container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding-top: 3rem;
-}
-
-.VPDoc h2 {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.VPDoc pre {
-  border-radius: 8px;
-}
-</style>
