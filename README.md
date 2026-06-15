@@ -5,7 +5,7 @@
 
 AI-powered browser and API test automation. Write tests in plain English — the agent figures out the selectors or API calls.
 
-[![npm version](https://badge.fury.io/js/iquest.svg)](https://www.npmjs.com/package/iquest)
+[![npm version](https://badge.fury.io/js/@vsaripella%2Fiquest.svg)](https://www.npmjs.com/package/@vsaripella/iquest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Quick Start
@@ -14,7 +14,7 @@ AI-powered browser and API test automation. Write tests in plain English — the
 
 **1. Scaffold the harness:**
 ```bash
-npx iquest init
+npx @vsaripella/iquest init
 ```
 
 **2. Write a feature file** (`.iquest/features/my-app.feature`):
@@ -396,7 +396,7 @@ Requires `@opencode-ai/sdk` to be installed.
 
 ## Links
 
-- **NPM:** https://www.npmjs.com/package/iquest
+- **NPM:** https://www.npmjs.com/package/@vsaripella/iquest
 - **GitHub:** https://github.com/svsatish/iQuest
 
 ## License
