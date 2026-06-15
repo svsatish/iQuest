@@ -13,7 +13,7 @@
   "devDependencies": {
     "@cucumber/cucumber": "^11.0.1",
     "@playwright/test": "^1.57.0",
-    "iquest": "latest",
+    "@vsaripella/iquest": "latest",
     "typescript": "^5.7.2",
     "varlock": "latest"
   }

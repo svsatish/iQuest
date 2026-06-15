@@ -31,19 +31,19 @@ const FRAMEWORKS = {
   'playwright-bdd': {
     name: 'Playwright-BDD',
     description: 'Playwright with Gherkin/Cucumber syntax (recommended)',
-    dependencies: ['iquest', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
+    dependencies: ['@vsaripella/iquest', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: ['@cucumber/cucumber'],
   },
   'cucumber': {
     name: 'Cucumber.js',
     description: 'Standalone Cucumber with Playwright',
-    dependencies: ['iquest', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
+    dependencies: ['@vsaripella/iquest', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: [],
   },
   'playwright-hybrid': {
     name: 'Playwright Hybrid (UI + API)',
     description: 'Plain-English hybrid UI + API tests with Playwright BDD',
-    dependencies: ['iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', 'typescript', 'varlock'],
+    dependencies: ['@vsaripella/iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', 'typescript', 'varlock'],
     devDependencies: ['@playwright/test'],
   },
 };
@@ -300,8 +300,8 @@ export async function init(cliFramework, options) {
 
   const frameworkConfig = FRAMEWORKS[framework];
   const openqaVersion = cliVersion.includes('beta') || cliVersion.includes('alpha') || cliVersion.includes('rc')
-    ? `iquest@${cliVersion}`
-    : 'iquest@latest';
+    ? `@vsaripella/iquest@${cliVersion}`
+    : '@vsaripella/iquest@latest';
 
   // Add the chosen agent SDK as a dependency
   const agentSdk = agent === 'openCode'
@@ -309,7 +309,7 @@ export async function init(cliFramework, options) {
     : '@anthropic-ai/claude-agent-sdk';
 
   const allDeps = [...frameworkConfig.dependencies, ...frameworkConfig.devDependencies, agentSdk].map(dep =>
-    dep === 'iquest' ? openqaVersion : dep
+    dep === '@vsaripella/iquest' ? openqaVersion : dep
   );
 
   let dependenciesInstalled = false;
