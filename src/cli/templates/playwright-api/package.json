@@ -12,9 +12,9 @@
     "test:report": "playwright show-report"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.59.0",
     "@vsaripella/iquest": "latest",
-    "playwright-bdd": "^8.4.1",
+    "playwright-bdd": "^8.5.1",
     "typescript": "^5.7.2",
     "varlock": "latest"
   },
