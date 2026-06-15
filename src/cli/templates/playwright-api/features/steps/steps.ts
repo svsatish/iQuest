@@ -1,4 +1,4 @@
-import { runAgent, openCode } from 'iquest';
+import { runAgent, openCode } from '@vsaripella/iquest';
 import { aistep } from './fixtures';
 
 const verbose = process.env.OPENQA_VERBOSE !== 'false';

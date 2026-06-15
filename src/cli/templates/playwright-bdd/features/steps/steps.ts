@@ -1,4 +1,4 @@
-import { runAgent, claudeCode } from 'iquest';
+import { runAgent, claudeCode } from '@vsaripella/iquest';
 import { aistep } from './fixtures';
 
 const verbose = process.env.OPENQA_VERBOSE !== 'false';
