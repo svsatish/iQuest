@@ -172,7 +172,12 @@ export async function init(cliFramework, options) {
   const spinner = clack.spinner();
   spinner.start(`Scaffolding ${FRAMEWORKS[framework].name} into .iquest...`);
 
-  const templateDir = join(__dirname, 'templates', framework);
+  const templateDirMap = {
+    'playwright-bdd': 'playwright-bdd',
+    'cucumber': 'cucumber',
+    'api': 'playwright-api',
+  };
+  const templateDir = join(__dirname, 'templates', templateDirMap[framework]);
 
   try {
     spinner.message('Copying template files...');
