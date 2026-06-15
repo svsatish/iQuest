@@ -34,12 +34,6 @@ const FRAMEWORKS = {
     dependencies: ['@vsaripella/iquest', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: ['@cucumber/cucumber'],
   },
-  'playwright-hybrid': {
-    name: 'Playwright Hybrid (UI + API)',
-    description: 'Plain-English hybrid UI + API tests with Playwright BDD',
-    dependencies: ['@vsaripella/iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
-    devDependencies: [],
-  }
   'cucumber': {
     name: 'Cucumber.js',
     description: 'Standalone Cucumber with Playwright',
