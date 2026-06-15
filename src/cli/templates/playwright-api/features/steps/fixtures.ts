@@ -1,12 +1,11 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { randomUUID } from 'crypto';
-import { request, Browser } from '@playwright/test';
+import { request } from '@playwright/test';
 import { test as base, createBdd } from 'playwright-bdd';
 
 type Fixtures = {
   apiBaseURL: string;
   api: Awaited<ReturnType<typeof request.newContext>>;
-  browser: Browser;
 };
 
 async function createMockApiServer() {
@@ -109,11 +108,6 @@ export const test = base.extend<Fixtures>({
 
     await use(api);
     await api.dispose();
-  },
-
-  browser: async ({}, use) => {
-    // Uses Playwright's built-in browser fixture
-    // Browser is only launched when actually used
   },
 });
 

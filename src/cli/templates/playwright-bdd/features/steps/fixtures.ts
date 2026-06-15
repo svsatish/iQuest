@@ -1,10 +1,9 @@
 import { test as base, createBdd } from 'playwright-bdd';
-import { request, Browser } from '@playwright/test';
+import { request } from '@playwright/test';
 
 type Fixtures = {
   api: Awaited<ReturnType<typeof request.newContext>>;
   apiBaseURL: string;
-  browser: Browser;
 };
 
 export const test = base.extend<Fixtures>({
@@ -20,13 +19,6 @@ export const test = base.extend<Fixtures>({
 
     await use(api);
     await api.dispose();
-  },
-
-  // Use browser fixture instead of page - browser is already a built-in fixture
-  // We'll lazily create pages in steps.ts only when UI steps are needed
-  browser: async ({}, use) => {
-    // This uses Playwright's built-in browser fixture
-    // The browser is only launched when actually used
   },
 });
 
