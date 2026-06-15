@@ -1,5 +1,8 @@
 import { runAgent, claudeCode } from '@vsaripella/iquest';
+import { createBdd } from 'playwright-bdd';
 import { aistep } from './fixtures';
+
+const { After } = createBdd();
 
 const verbose = process.env.OPENQA_VERBOSE !== 'false';
 
@@ -51,8 +54,6 @@ aistep(/^(.*)$/, async ({ browser, api }, action: string) => {
 });
 
 // Clean up cached pages after each scenario
-import { After } from 'playwright-bdd';
-
 After(async () => {
     for (const page of pageCache.values()) {
         await page.close().catch(() => {});

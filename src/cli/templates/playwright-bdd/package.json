@@ -14,9 +14,9 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.0.1",
-    "@playwright/test": "^1.59.0",
+    "@playwright/test": "^1.61.0",
     "@vsaripella/iquest": "latest",
-    "playwright-bdd": "^8.5.1",
+    "playwright-bdd": "^9.1.0",
     "typescript": "^5.7.2",
     "varlock": "latest"
   },
