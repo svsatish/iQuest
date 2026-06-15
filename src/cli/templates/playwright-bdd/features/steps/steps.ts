@@ -1,4 +1,4 @@
-import { runAgent, claudeCode } from '@vsaripella/iquest';
+import { runAgent, openCode } from '@vsaripella/iquest';
 import { createBdd } from 'playwright-bdd';
 import { aistep } from './fixtures';
 
@@ -35,7 +35,7 @@ aistep(/^(.*)$/, async ({ browser, api }, action: string) => {
         if (verbose) {
             console.log(`🤖 [API] ${action}`);
         }
-        await runAgent(claudeCode('claude-haiku-4-5'), `${buildEnvContext(false)}${action}`, api, { verbose });
+        await runAgent(openCode('opencode/nemotron-3-ultra-free'), `${buildEnvContext(false)}${action}`, api, { verbose });
         return;
     }
 
@@ -50,7 +50,7 @@ aistep(/^(.*)$/, async ({ browser, api }, action: string) => {
     if (verbose) {
         console.log(`🤖 [UI] ${action}`);
     }
-    await runAgent(claudeCode('claude-haiku-4-5'), `${buildEnvContext(true)}${action}`, page, { verbose });
+    await runAgent(openCode('opencode/nemotron-3-ultra-free'), `${buildEnvContext(true)}${action}`, page, { verbose });
 });
 
 // Clean up cached pages after each scenario
