@@ -40,8 +40,8 @@ const FRAMEWORKS = {
     dependencies: ['iquest', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: [],
   },
-  'api': {
-    name: 'Playwright Hybrid BDD',
+  'playwright-hybrid': {
+    name: 'Playwright Hybrid (UI + API)',
     description: 'Plain-English hybrid UI + API tests with Playwright BDD',
     dependencies: ['iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', 'typescript', 'varlock'],
     devDependencies: ['@playwright/test'],
@@ -78,7 +78,7 @@ export async function init(cliFramework, options) {
       options: [
         { value: 'playwright-bdd', label: 'Playwright-BDD' },
         { value: 'cucumber', label: 'CucumberJS' },
-        { value: 'api', label: 'Playwright Hybrid (UI + API)' },
+        { value: 'playwright-hybrid', label: 'Playwright Hybrid (UI + API)' },
       ],
     });
     if (clack.isCancel(framework)) return clack.cancel('Operation cancelled.');
@@ -87,7 +87,7 @@ export async function init(cliFramework, options) {
   // Agent and model selection
   let agent;
   let model;
-  if (framework === 'api') {
+  if (framework === 'playwright-hybrid') {
     agent = 'openCode';
     model = await clack.select({
       message: 'Which OpenCode model would you like to use?',
@@ -138,7 +138,7 @@ export async function init(cliFramework, options) {
   }
 
   // Feature or test files path
-  const pathPrompt = framework === 'api'
+  const pathPrompt = framework === 'playwright-hybrid'
     ? 'Where should hybrid feature files live? (path relative to .iquest/)'
     : 'Where should feature files live? (path relative to .iquest/)';
   let sourcePath = await clack.text({
@@ -175,7 +175,7 @@ export async function init(cliFramework, options) {
   const templateDirMap = {
     'playwright-bdd': 'playwright-bdd',
     'cucumber': 'cucumber',
-    'api': 'playwright-api',
+    'playwright-hybrid': 'playwright-api',
   };
   const templateDir = join(__dirname, 'templates', templateDirMap[framework]);
 
@@ -183,7 +183,7 @@ export async function init(cliFramework, options) {
     spinner.message('Copying template files...');
     const toCopy = ['gitignore', 'package.json', 'README.md', '.env.example', '.env.schema'];
 
-    if (framework === 'playwright-bdd' || framework === 'api') {
+    if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
       toCopy.push('playwright.config.ts');
       mkdirSync(join(targetDir, 'steps'), { recursive: true });
       cpSync(join(templateDir, 'features/steps/fixtures.ts'), join(targetDir, 'steps/fixtures.ts'));
@@ -215,7 +215,7 @@ export async function init(cliFramework, options) {
     spinner.message('Configuring paths...');
 
     // Rewrite configuration files with the chosen features path
-    if (framework === 'playwright-bdd' || framework === 'api') {
+    if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
       const pConfigPath = join(targetDir, 'playwright.config.ts');
       let content = readFileSync(pConfigPath, 'utf8');
       content = content.replace("featuresRoot: 'features'", `featuresRoot: '${sourcePath}'`);
@@ -232,7 +232,7 @@ export async function init(cliFramework, options) {
       writeFileSync(cConfigPath, content);
     }
 
-    spinner.message(framework === 'api' ? 'Configuring hybrid step definitions...' : 'Configuring step definitions...');
+    spinner.message(framework === 'playwright-hybrid' ? 'Configuring hybrid step definitions...' : 'Configuring step definitions...');
 
     // Rewrite steps file: swap provider factory and model
     const stepsPath = framework === 'playwright-bdd'
@@ -262,7 +262,7 @@ export async function init(cliFramework, options) {
     const packageJsonPath = join(targetDir, 'package.json');
     if (existsSync(packageJsonPath)) {
       const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-      if (framework === 'playwright-bdd' || framework === 'api') {
+      if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
         pkg.scripts = {
           bddgen: 'bddgen',
           test: 'npm run bddgen && playwright test',
@@ -270,7 +270,7 @@ export async function init(cliFramework, options) {
           'test:headed': 'npm run bddgen && playwright test --headed',
           'test:report': 'playwright show-report'
         };
-      } else if (framework === 'api') {
+      } else if (framework === 'playwright-hybrid') {
         pkg.scripts = {
           test: 'playwright test',
           'test:ui': 'playwright test --ui',
@@ -348,7 +348,7 @@ export async function init(cliFramework, options) {
     ? `   Local (no API key needed): opencode auth login\n   CI / API key:               add provider key to .env (e.g. ANTHROPIC_API_KEY)`
     : `   Local (no API key needed): claude login\n   CI / API key:               add ANTHROPIC_API_KEY to .env`;
 
-  const nextStepRun = framework === 'api'
+  const nextStepRun = framework === 'playwright-hybrid'
     ? 'npm test'
     : 'npm run test:headed';
 
