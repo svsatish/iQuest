@@ -19,5 +19,8 @@
     "playwright-bdd": "^8.5.1",
     "typescript": "^5.7.2",
     "varlock": "latest"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

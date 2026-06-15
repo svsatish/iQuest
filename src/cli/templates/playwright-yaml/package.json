@@ -16,5 +16,8 @@
     "@playwright/test": "^1.59.0",
     "@vsaripella/iquest": "latest",
     "varlock": "latest"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
