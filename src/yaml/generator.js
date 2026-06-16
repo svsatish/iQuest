@@ -33,15 +33,24 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml', yamlFilePath
   code += `// Edit the YAML file instead and run: npx openqa generate\n\n`;
 
   // Imports
+  const hasApiTests = spec.tests?.some(t => t.context === 'api') || spec.defaultContext === 'api';
+  const useDefaultApiFixture = hasApiTests && !spec.fixtureFile;
+
   if (spec.fixtureFile && yamlFilePath) {
     // Custom fixture file: compute relative path from output to fixture
     const fixtureImportPath = resolveFixtureImportPath(yamlFilePath, spec.fixtureFile);
     code += `import { test } from '${fixtureImportPath}';\n`;
+  } else if (useDefaultApiFixture) {
+    // Use default API fixture from iQuest
+    // The fixture file should be at project root (same level as .tests-gen)
+    // Generated tests are in .tests-gen/, so import from ../fixtures.js
+    code += `import { test } from '../fixtures.js';\n`;
   } else {
     // Default: use @playwright/test
     code += `import { test } from '@playwright/test';\n`;
   }
-  code += `import { runAgent, claudeCode } from 'openqa';\n\n`;
+  code += `import { runAgent, claudeCode } from '@vsaripella/iquest';\n`;
+  code += `\n`;
 
   // Start describe block
   code += `test.describe('${spec.name}', () => {\n`;
@@ -49,21 +58,21 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml', yamlFilePath
   // Add hooks if present
   if (spec.hooks) {
     if (spec.hooks.beforeEach) {
-      code += generateHook('beforeEach', spec.hooks.beforeEach);
+      code += generateHook('beforeEach', spec.hooks.beforeEach, spec.defaultContext);
     }
     if (spec.hooks.afterEach) {
-      code += generateHook('afterEach', spec.hooks.afterEach);
+      code += generateHook('afterEach', spec.hooks.afterEach, spec.defaultContext);
     }
   }
 
   // Generate fixtures if present
   if (spec.fixtures) {
-    code += generateFixtures(spec.fixtures);
+    code += generateFixtures(spec.fixtures, spec.defaultContext);
   }
 
   // Generate tests
   for (const testDef of spec.tests) {
-    code += generateTestCase(testDef);
+    code += generateTestCase(testDef, spec.defaultContext);
   }
 
   // Close describe block
@@ -76,14 +85,19 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml', yamlFilePath
  * Generate hook code (beforeEach/afterEach)
  * @param {string} hookType - 'beforeEach' or 'afterEach'
  * @param {string[]} steps - Array of natural language steps
+ * @param {string} [defaultContext] - Default context from spec
  * @returns {string} - Generated hook code
  */
-function generateHook(hookType, steps) {
-  let code = `  test.${hookType}(async ({ page, context }) => {\n`;
+function generateHook(hookType, steps, defaultContext = 'browser') {
+  const isApiHook = defaultContext === 'api';
+  const fixtureParam = isApiHook ? 'api' : 'page';
+  const contextParam = isApiHook ? 'api' : 'page';
+
+  let code = `  test.${hookType}(async ({ ${fixtureParam} }) => {\n`;
 
   for (const step of steps) {
     code += `    await test.step('${escapeString(step)}', async () => {\n`;
-    code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', page, { verbose: true });\n`;
+    code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', ${contextParam}, { verbose: true });\n`;
     code += `    });\n`;
   }
 
@@ -94,9 +108,10 @@ function generateHook(hookType, steps) {
 /**
  * Generate fixtures code
  * @param {object} fixtures - Fixtures object from YAML
+ * @param {string} [defaultContext] - Default context from spec
  * @returns {string} - Generated fixtures code
  */
-function generateFixtures(fixtures) {
+function generateFixtures(fixtures, defaultContext = 'browser') {
   let code = '';
 
   // Note: For now, fixtures are just setup steps in beforeEach
@@ -107,10 +122,13 @@ function generateFixtures(fixtures) {
   for (const [name, definition] of Object.entries(fixtures)) {
     code += `  // Fixture: ${name}\n`;
     if (definition.setup) {
-      code += `  test.beforeEach(async ({ page, context }) => {\n`;
+      const isApiFixture = defaultContext === 'api';
+      const fixtureParam = isApiFixture ? 'api' : 'page';
+      const contextParam = isApiFixture ? 'api' : 'page';
+      code += `  test.beforeEach(async ({ ${fixtureParam} }) => {\n`;
       for (const step of definition.setup) {
         code += `    await test.step('[Fixture ${name}] ${escapeString(step)}', async () => {\n`;
-        code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', page, { verbose: true });\n`;
+        code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', ${contextParam}, { verbose: true });\n`;
         code += `    });\n`;
       }
       code += `  });\n\n`;
@@ -123,14 +141,21 @@ function generateFixtures(fixtures) {
 /**
  * Generate test case code
  * @param {object} testDef - Test definition from YAML
+ * @param {string} [defaultContext] - Default context from spec
  * @returns {string} - Generated test code
  */
-function generateTestCase(testDef) {
+function generateTestCase(testDef, defaultContext = 'browser') {
   // Build test name with tags
   const tags = testDef.tags ? ' ' + testDef.tags.map(t => `@${t}`).join(' ') : '';
   const testName = `${testDef.name}${tags}`;
 
-  let code = `  test('${escapeString(testName)}', async ({ page, context }) => {\n`;
+  // Determine context for this test
+  const context = testDef.context || defaultContext;
+  const isApiTest = context === 'api';
+  const fixtureParam = isApiTest ? 'api' : 'page';
+  const contextParam = isApiTest ? 'api' : 'page';
+
+  let code = `  test('${escapeString(testName)}', async ({ ${fixtureParam} }) => {\n`;
 
   // Add annotations
   if (testDef.slow) {
@@ -145,13 +170,13 @@ function generateTestCase(testDef) {
 
   // Handle data-driven tests
   if (testDef.data) {
-    return generateDataDrivenTest(testDef);
+    return generateDataDrivenTest(testDef, defaultContext);
   }
 
   // Generate steps
   for (const step of testDef.steps) {
     code += `    await test.step('${escapeString(step)}', async () => {\n`;
-    code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', page, { verbose: true });\n`;
+    code += `      await runAgent(claudeCode('claude-haiku-4-5'), '${escapeString(step)}', ${contextParam}, { verbose: true });\n`;
     code += `    });\n`;
   }
 
@@ -162,9 +187,10 @@ function generateTestCase(testDef) {
 /**
  * Generate data-driven test code
  * @param {object} testDef - Test definition with data property
+ * @param {string} [defaultContext] - Default context from spec
  * @returns {string} - Generated test code with data loop
  */
-function generateDataDrivenTest(testDef) {
+function generateDataDrivenTest(testDef, defaultContext = 'browser') {
   let code = '';
 
   // Create data array
@@ -177,7 +203,13 @@ function generateDataDrivenTest(testDef) {
   const testNameTemplate = testDef.name.replace(/\{\{(\w+)\}\}/g, '${data.$1}');
   const tags = testDef.tags ? ' ' + testDef.tags.map(t => `@${t}`).join(' ') : '';
 
-  code += `    test(\`${testNameTemplate}${tags}\`, async ({ page, context }) => {\n`;
+  // Determine context for this test
+  const context = testDef.context || defaultContext;
+  const isApiTest = context === 'api';
+  const fixtureParam = isApiTest ? 'api' : 'page';
+  const contextParam = isApiTest ? 'api' : 'page';
+
+  code += `    test(\`${testNameTemplate}${tags}\`, async ({ ${fixtureParam} }) => {\n`;
 
   // Add annotations
   if (testDef.slow) {
@@ -188,7 +220,7 @@ function generateDataDrivenTest(testDef) {
   for (const step of testDef.steps) {
     const interpolatedStep = step.replace(/\{\{(\w+)\}\}/g, '${data.$1}');
     code += `      await test.step(\`${interpolatedStep}\`, async () => {\n`;
-    code += `        await runAgent(claudeCode('claude-haiku-4-5'), \`${interpolatedStep}\`, page, { verbose: true });\n`;
+    code += `        await runAgent(claudeCode('claude-haiku-4-5'), \`${interpolatedStep}\`, ${contextParam}, { verbose: true });\n`;
     code += `      });\n`;
   }
 

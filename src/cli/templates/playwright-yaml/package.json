@@ -1,12 +1,12 @@
 {
-  "name": "openqa-yaml-project",
+  "name": "iquest-yaml-project",
   "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "generate": "openqa generate",
+    "generate": "iquest generate",
     "test": "npm run generate && playwright test",
     "test:ui": "npm run generate && playwright test --ui",
     "test:headed": "npm run generate && playwright test --headed",

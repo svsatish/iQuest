@@ -51,6 +51,11 @@ export function validateSpec(spec) {
     }
   }
 
+  // Validate defaultContext if present
+  if (spec.defaultContext && !['browser', 'api'].includes(spec.defaultContext)) {
+    errors.push('"defaultContext" must be "browser" or "api"');
+  }
+
   // Validate each test
   if (spec.tests && Array.isArray(spec.tests)) {
     spec.tests.forEach((test, index) => {
@@ -166,6 +171,11 @@ function validateTest(test, index, errors) {
     });
   }
 
+  // Validate context
+  if (test.context !== undefined && !['browser', 'api'].includes(test.context)) {
+    errors.push(`${prefix}.context must be "browser" or "api"`);
+  }
+
   // Validate annotations
   if (test.slow !== undefined && typeof test.slow !== 'boolean') {
     errors.push(`${prefix}.slow must be a boolean`);
@@ -189,6 +199,7 @@ export function getSchemaDoc() {
 YAML Test Schema:
 
 name: string              # Test suite name (required)
+defaultContext?: string   # Default context for all tests: 'browser' or 'api' (default: 'browser')
 fixtureFile?: string      # Custom fixture file path (optional, relative to YAML file)
                           # Example: './fixtures/browser.js' or '../shared/fixtures.ts'
 url?: string              # Base URL for documentation (optional, configure in playwright.config.ts)
@@ -204,6 +215,7 @@ fixtures?:                # Custom fixtures (optional) - DEPRECATED: Use fixture
 
 tests:                    # Test cases (required)
   - name: string          # Test name (required)
+    context?: string      # Test context: 'browser' or 'api' (default: 'browser' or defaultContext)
     steps: string[]       # Natural language steps (required)
     tags?: string[]       # Tags for filtering (e.g., ['smoke', 'critical'])
     slow?: boolean        # Mark as slow test

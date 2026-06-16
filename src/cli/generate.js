@@ -165,16 +165,25 @@ function getOutputPath(yamlFile) {
 
   // Convert absolute path to relative path from cwd
   let relativePath = yamlFile;
-  if (join(yamlFile).startsWith(process.cwd())) {
-    relativePath = relative(process.cwd(), yamlFile);
+  const resolvedYamlFile = resolve(yamlFile);
+  if (resolvedYamlFile.startsWith(process.cwd())) {
+    relativePath = relative(process.cwd(), resolvedYamlFile);
   }
 
   // Replace extension
   let jsFile = relativePath.replace(/\.spec\.ya?ml$/, '.spec.js');
 
-  // If starts with tests/, strip that prefix
-  if (jsFile.startsWith('tests/')) {
-    jsFile = jsFile.substring(6);  // Remove 'tests/'
+  // Strip common prefixes (longest first)
+  const prefixes = [
+    'src/cli/templates/playwright-yaml/tests/',
+    'src/cli/templates/playwright-yaml/',
+    'tests/',
+  ];
+  for (const prefix of prefixes) {
+    if (jsFile.startsWith(prefix)) {
+      jsFile = jsFile.substring(prefix.length);
+      break;
+    }
   }
 
   // Prepend .tests-gen/

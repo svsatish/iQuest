@@ -1,8 +1,10 @@
 name: Example Tests
+defaultContext: browser
 
 tests:
   - name: Add a todo item
     tags: [smoke]
+    context: browser
     steps:
       - Navigate to the TodoMVC https://demo.playwright.dev/todomvc/ page
       - Add a new todo item "Learn OpenQA"

@@ -30,7 +30,7 @@ const cliVersion = cliPackageJson.version;
 const FRAMEWORKS = {
   'playwright-bdd': {
     name: 'Playwright-BDD',
-    description: 'Playwright with Gherkin/Cucumber syntax (recommended)',
+    description: 'Playwright with Gherkin/Cucumber syntax (recommended) — supports UI + API',
     dependencies: ['@vsaripella/iquest', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: ['@cucumber/cucumber'],
   },
@@ -40,10 +40,10 @@ const FRAMEWORKS = {
     dependencies: ['@vsaripella/iquest', '@cucumber/cucumber', '@playwright/test', 'typescript', 'varlock'],
     devDependencies: [],
   },
-  'playwright-hybrid': {
-    name: 'Playwright Hybrid (UI + API)',
-    description: 'Plain-English hybrid UI + API tests with Playwright BDD',
-    dependencies: ['@vsaripella/iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', 'playwright-bdd', '@playwright/test', 'typescript', 'varlock'],
+  'playwright-yaml': {
+    name: 'Playwright YAML',
+    description: 'YAML-based test definitions with AI-powered execution (UI + API)',
+    dependencies: ['@vsaripella/iquest', '@modelcontextprotocol/sdk', '@opencode-ai/sdk', '@playwright/test', 'typescript', 'varlock', 'js-yaml'],
     devDependencies: [],
   },
 };
@@ -76,9 +76,9 @@ export async function init(cliFramework, options) {
     framework = await clack.select({
       message: 'Which framework do you want to use?',
       options: [
-        { value: 'playwright-bdd', label: 'Playwright-BDD' },
+        { value: 'playwright-bdd', label: 'Playwright-BDD (UI + API)' },
         { value: 'cucumber', label: 'CucumberJS' },
-        { value: 'playwright-hybrid', label: 'Playwright Hybrid (UI + API)' },
+        { value: 'playwright-yaml', label: 'Playwright YAML (UI + API)' },
       ],
     });
     if (clack.isCancel(framework)) return clack.cancel('Operation cancelled.');
@@ -87,60 +87,38 @@ export async function init(cliFramework, options) {
   // Agent and model selection
   let agent;
   let model;
-  if (framework === 'playwright-hybrid') {
-    agent = 'openCode';
-    model = await clack.select({
-      message: 'Which OpenCode model would you like to use?',
-      options: OPENCODE_MODELS,
+  agent = await clack.select({
+    message: 'Which AI agent would you like to use?',
+    options: [
+      { value: 'claudeCode', label: 'Claude Code (Anthropic SDK)' },
+      { value: 'openCode', label: 'OpenCode (multi-provider — Anthropic, OpenAI, Google, …)' },
+    ],
+  });
+  if (clack.isCancel(agent)) return clack.cancel('Operation cancelled.');
+
+  const modelOptions = agent === 'openCode' ? OPENCODE_MODELS : CLAUDE_CODE_MODELS;
+  model = await clack.select({
+    message: 'Which model would you like to use?',
+    options: modelOptions,
+  });
+  if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
+
+  if (model === 'custom') {
+    const placeholder = agent === 'openCode'
+      ? 'e.g. anthropic/claude-3-5-sonnet-20241022'
+      : 'e.g. claude-3-5-sonnet-20241022';
+    model = await clack.text({
+      message: 'Enter the model name manually:',
+      placeholder,
+      validate: (value) => {
+        if (!value) return 'Please enter a model name.';
+      }
     });
     if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-
-    if (model === 'custom') {
-      model = await clack.text({
-        message: 'Enter the model name manually:',
-        placeholder: 'e.g. anthropic/claude-3-5-sonnet-20241022',
-        validate: (value) => {
-          if (!value) return 'Please enter a model name.';
-        }
-      });
-      if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-    }
-  } else {
-    agent = await clack.select({
-      message: 'Which AI agent would you like to use?',
-      options: [
-        { value: 'claudeCode', label: 'Claude Code (Anthropic SDK)' },
-        { value: 'openCode', label: 'OpenCode (multi-provider — Anthropic, OpenAI, Google, …)' },
-      ],
-    });
-    if (clack.isCancel(agent)) return clack.cancel('Operation cancelled.');
-
-    const modelOptions = agent === 'openCode' ? OPENCODE_MODELS : CLAUDE_CODE_MODELS;
-    model = await clack.select({
-      message: 'Which model would you like to use?',
-      options: modelOptions,
-    });
-    if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-
-    if (model === 'custom') {
-      const placeholder = agent === 'openCode'
-        ? 'e.g. anthropic/claude-3-5-sonnet-20241022'
-        : 'e.g. claude-3-5-sonnet-20241022';
-      model = await clack.text({
-        message: 'Enter the model name manually:',
-        placeholder,
-        validate: (value) => {
-          if (!value) return 'Please enter a model name.';
-        }
-      });
-      if (clack.isCancel(model)) return clack.cancel('Operation cancelled.');
-    }
   }
 
   // Feature or test files path
-  const pathPrompt = framework === 'playwright-hybrid'
-    ? 'Where should hybrid feature files live? (path relative to .iquest/)'
-    : 'Where should feature files live? (path relative to .iquest/)';
+  const pathPrompt = 'Where should feature files live? (path relative to .iquest/)';
   let sourcePath = await clack.text({
     message: pathPrompt,
     initialValue: 'features',
@@ -175,7 +153,7 @@ export async function init(cliFramework, options) {
   const templateDirMap = {
     'playwright-bdd': 'playwright-bdd',
     'cucumber': 'cucumber',
-    'playwright-hybrid': 'playwright-api',
+    'playwright-yaml': 'playwright-yaml',
   };
   const templateDir = join(__dirname, 'templates', templateDirMap[framework]);
 
@@ -183,7 +161,7 @@ export async function init(cliFramework, options) {
     spinner.message('Copying template files...');
     const toCopy = ['gitignore', 'package.json', 'README.md', '.env.example', '.env.schema'];
 
-    if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
+    if (framework === 'playwright-bdd') {
       toCopy.push('playwright.config.ts');
       mkdirSync(join(targetDir, 'steps'), { recursive: true });
       cpSync(join(templateDir, 'features/steps/fixtures.ts'), join(targetDir, 'steps/fixtures.ts'));
@@ -204,6 +182,16 @@ export async function init(cliFramework, options) {
       for (const f of featureFiles) {
         cpSync(join(templateDir, 'features', f), join(targetDir, 'features', f));
       }
+    } else if (framework === 'playwright-yaml') {
+      toCopy.push('playwright.config.js');
+      // Copy fixtures.js for API support to project root (same level as .tests-gen)
+      cpSync(join(templateDir, 'fixtures.js'), join(process.cwd(), 'fixtures.js'));
+      // Copy example YAML test files into .iquest/tests/
+      mkdirSync(join(targetDir, 'tests'), { recursive: true });
+      const yamlFiles = readdirSync(join(templateDir, 'tests')).filter(f => f.endsWith('.spec.yaml') || f.endsWith('.spec.yml'));
+      for (const f of yamlFiles) {
+        cpSync(join(templateDir, 'tests', f), join(targetDir, 'tests', f));
+      }
     }
 
     for (const file of toCopy) {
@@ -215,7 +203,7 @@ export async function init(cliFramework, options) {
     spinner.message('Configuring paths...');
 
     // Rewrite configuration files with the chosen features path
-    if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
+    if (framework === 'playwright-bdd') {
       const pConfigPath = join(targetDir, 'playwright.config.ts');
       let content = readFileSync(pConfigPath, 'utf8');
       content = content.replace("featuresRoot: 'features'", `featuresRoot: '${sourcePath}'`);
@@ -232,7 +220,14 @@ export async function init(cliFramework, options) {
       writeFileSync(cConfigPath, content);
     }
 
-    spinner.message(framework === 'playwright-hybrid' ? 'Configuring hybrid step definitions...' : 'Configuring step definitions...');
+    if (framework === 'playwright-yaml') {
+      const pConfigPath = join(targetDir, 'playwright.config.js');
+      let content = readFileSync(pConfigPath, 'utf8');
+      content = content.replace("testDir: 'tests'", `testDir: '${sourcePath}'`);
+      writeFileSync(pConfigPath, content);
+    }
+
+    spinner.message('Configuring step definitions...');
 
     // Rewrite steps file: swap provider factory and model
     const stepsPath = framework === 'playwright-bdd'
@@ -262,7 +257,7 @@ export async function init(cliFramework, options) {
     const packageJsonPath = join(targetDir, 'package.json');
     if (existsSync(packageJsonPath)) {
       const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-      if (framework === 'playwright-bdd' || framework === 'playwright-hybrid') {
+      if (framework === 'playwright-bdd') {
         pkg.scripts = {
           bddgen: 'bddgen',
           test: 'npm run bddgen && playwright test',
@@ -270,11 +265,12 @@ export async function init(cliFramework, options) {
           'test:headed': 'npm run bddgen && playwright test --headed',
           'test:report': 'playwright show-report'
         };
-      } else if (framework === 'playwright-hybrid') {
+      } else if (framework === 'playwright-yaml') {
         pkg.scripts = {
-          test: 'playwright test',
-          'test:ui': 'playwright test --ui',
-          'test:headed': 'playwright test --headed',
+          generate: 'npx iquest generate',
+          test: 'npm run generate && playwright test',
+          'test:ui': 'npm run generate && playwright test --ui',
+          'test:headed': 'npm run generate && playwright test --headed',
           'test:report': 'playwright show-report'
         };
       } else {
@@ -348,7 +344,7 @@ export async function init(cliFramework, options) {
     ? `   Local (no API key needed): opencode auth login\n   CI / API key:               add provider key to .env (e.g. ANTHROPIC_API_KEY)`
     : `   Local (no API key needed): claude login\n   CI / API key:               add ANTHROPIC_API_KEY to .env`;
 
-  const nextStepRun = framework === 'playwright-hybrid'
+  const nextStepRun = (framework === 'playwright-yaml')
     ? 'npm test'
     : 'npm run test:headed';
 
