@@ -1,0 +1,35 @@
+name: Hybrid UI + API Test Examples
+defaultContext: browser
+url: https://demo.playwright.dev/todomvc/
+
+tests:
+  - name: Create todo via API, verify in UI
+    tags: [hybrid, smoke]
+    context: api
+    steps:
+      - 'Call POST /todos with body {"title": "Hybrid test todo", "completed": false}'
+      - Verify the response status is 201
+      - Verify the JSON body has id equal to a non-empty string
+
+  - name: Verify todo appears in UI
+    tags: [hybrid, smoke]
+    context: browser
+    steps:
+      - Navigate to the TodoMVC home page
+      - Should see "Hybrid test todo" in the todo list
+
+  - name: Add todo via UI, verify via API
+    tags: [hybrid]
+    context: browser
+    steps:
+      - Navigate to the TodoMVC home page
+      - Add a new todo item "UI created todo" on the web page
+      - Verify that "UI created todo" appears in the todo list
+
+  - name: Get all todos via API
+    tags: [hybrid]
+    context: api
+    steps:
+      - Call GET /todos
+      - Verify the response status is 200
+      - Verify the JSON body contains "UI created todo"

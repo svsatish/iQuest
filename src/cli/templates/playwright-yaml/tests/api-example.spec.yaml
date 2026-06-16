@@ -1,0 +1,32 @@
+name: API Test Examples
+defaultContext: api
+url: https://api.example.com
+
+tests:
+  - name: Health check endpoint
+    context: api
+    tags: [smoke, api]
+    steps:
+      - Call GET /health
+      - Verify the response status is 200
+      - Verify the JSON body has ok equal to true
+
+  - name: Create a new todo via API
+    context: api
+    tags: [api]
+    steps:
+      - 'Call POST /todos with body {"title": "Learn API testing", "completed": false}'
+      - Verify the response status is 201
+      - Verify the JSON body has id equal to a non-empty string
+      - Verify the JSON body has title equal to "Learn API testing"
+
+  - name: Get todo by ID via API
+    context: api
+    tags: [api]
+    steps:
+      - 'Call POST /todos with body {"title": "Get by ID test", "completed": false}'
+      - Verify the response status is 201
+      - Store the returned id
+      - Call GET /todos/{{id}}
+      - Verify the response status is 200
+      - Verify the JSON body has title equal to "Get by ID test"
