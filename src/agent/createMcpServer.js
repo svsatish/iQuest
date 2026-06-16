@@ -432,7 +432,7 @@ export async function createMcpHttpServer(context, options = {}) {
 
     // Override CallToolRequestSchema handler to proxy browser_* tools to Playwright MCP
     const originalCallToolHandler = mcpServer._requestHandlers.get(CallToolRequestSchema.shape.method.value);
-    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
         const toolName = request.params.name;
 
         // Proxy browser_* tools to Playwright MCP
@@ -440,7 +440,7 @@ export async function createMcpHttpServer(context, options = {}) {
             try {
                 const handler = playwrightMcpServer._requestHandlers.get(CallToolRequestSchema.shape.method.value);
                 if (handler) {
-                    return await handler(request);
+                    return await handler(request, extra);
                 }
             } catch (error) {
                 return toolError(`Playwright MCP error: ${error.message}`);
@@ -448,19 +448,19 @@ export async function createMcpHttpServer(context, options = {}) {
         }
 
         // Otherwise use original handler (API tools)
-        return originalCallToolHandler(request);
+        return originalCallToolHandler(request, extra);
     });
 
     // Also override ListToolsRequestSchema to include browser tools
     const originalListToolsHandler = mcpServer._requestHandlers.get(ListToolsRequestSchema.shape.method.value);
-    server.setRequestHandler(ListToolsRequestSchema, async (request) => {
-        const apiResult = await originalListToolsHandler(request);
+    server.setRequestHandler(ListToolsRequestSchema, async (request, extra) => {
+        const apiResult = await originalListToolsHandler(request, extra);
 
         if (isBrowserContext && playwrightMcpServer) {
             try {
                 const handler = playwrightMcpServer._requestHandlers.get(ListToolsRequestSchema.shape.method.value);
                 if (handler) {
-                    const browserResult = await handler(request);
+                    const browserResult = await handler(request, extra);
                     return {
                         tools: [...apiResult.tools, ...browserResult.tools]
                     };
