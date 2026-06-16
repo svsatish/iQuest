@@ -48,7 +48,9 @@ export class Orchestrator {
         }
 
         const { createMcpHttpServer } = await import('./createMcpServer.js');
-        const { url: mcpUrl, cleanup } = await createMcpHttpServer(browserContext, { baseUrl: this.options.baseUrl });
+        // Pass the appropriate context: browserContext for browser mode, sessionKey (API context) for API mode
+        const contextForMcp = isBrowserContext ? browserContext : sessionKey;
+        const { url: mcpUrl, cleanup } = await createMcpHttpServer(contextForMcp, { baseUrl: this.options.baseUrl });
 
         try {
             const result = await provider.run(prompt, {
