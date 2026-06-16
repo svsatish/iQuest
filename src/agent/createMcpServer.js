@@ -261,19 +261,159 @@ export async function createMcpHttpServer(context, options = {}) {
     const baseUrl = options.baseUrl || process.env.BASE_URL || '';
     const isBrowserContext = context && typeof context === 'object' && typeof context.newPage === 'function';
 
-    let mcpServer;
-    let apiState = null;
+    // Always create a unified MCP server with both browser and API tools
+    const [{ Server }, { StreamableHTTPServerTransport }, { CallToolRequestSchema, ListToolsRequestSchema }] = await Promise.all([
+        import('@modelcontextprotocol/sdk/server/index.js').catch(() => {
+            throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
+        }),
+        import('@modelcontextprotocol/sdk/server/streamableHttp.js').catch(() => {
+            throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
+        }),
+        import('@modelcontextprotocol/sdk/types.js').catch(() => {
+            throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
+        }),
+    ]);
 
+    const server = new Server(
+        {
+            name: 'openqa-unified',
+            version: '0.0.10',
+        },
+        {
+            capabilities: {
+                tools: {},
+            },
+        }
+    );
+
+    // Add API tools
+    const apiState = buildApiState(context);
+
+    server.setRequestHandler(ListToolsRequestSchema, async () => ({
+        tools: [
+            {
+                name: API_TOOL_NAMES.request,
+                description: 'Send an HTTP request and store the response for later assertions.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        method: { type: 'string', description: 'HTTP method such as GET, POST, PUT, PATCH, DELETE, HEAD, or OPTIONS' },
+                        url: { type: 'string', description: 'Absolute URL or relative path resolved against BASE_URL' },
+                        headers: {
+                            type: 'object',
+                            additionalProperties: true,
+                            description: 'Optional request headers',
+                        },
+                        query: {
+                            type: 'object',
+                            additionalProperties: true,
+                            description: 'Optional query parameters appended to the URL',
+                        },
+                        body: {
+                            description: 'Optional request body. Objects are sent as JSON.',
+                        },
+                        timeoutMs: { type: 'number', description: 'Optional request timeout in milliseconds' },
+                    },
+                    required: ['method', 'url'],
+                },
+            },
+            {
+                name: API_TOOL_NAMES.status,
+                description: 'Assert the last API response status code.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        expected: { type: 'number', description: 'Expected HTTP status code' },
+                    },
+                    required: ['expected'],
+                },
+            },
+            {
+                name: API_TOOL_NAMES.header,
+                description: 'Assert the last API response includes a header with an exact value.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        name: { type: 'string', description: 'Header name' },
+                        expected: { type: 'string', description: 'Expected header value' },
+                    },
+                    required: ['name', 'expected'],
+                },
+            },
+            {
+                name: API_TOOL_NAMES.bodyContains,
+                description: 'Assert the last API response body contains text.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        text: { type: 'string', description: 'Text that must be present in the response body' },
+                        caseSensitive: { type: 'boolean', description: 'Whether the text match should be case-sensitive' },
+                    },
+                    required: ['text'],
+                },
+            },
+            {
+                name: API_TOOL_NAMES.jsonField,
+                description: 'Assert a JSON field in the last API response matches an expected value.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        path: { type: 'string', description: 'Dot path or array path such as data.user.id or items[0].name' },
+                        expected: { description: 'Expected JSON value' },
+                    },
+                    required: ['path', 'expected'],
+                },
+            },
+        ],
+    }));
+
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+        const args = request.params.arguments ?? {};
+
+        try {
+            switch (request.params.name) {
+                case API_TOOL_NAMES.request:
+                    return await requestTool({
+                        method: args.method,
+                        url: args.url,
+                        headers: args.headers ?? {},
+                        query: args.query ?? {},
+                        body: args.body,
+                        timeoutMs: args.timeoutMs,
+                    }, apiState, baseUrl);
+                case API_TOOL_NAMES.status:
+                    return { content: [{ type: 'text', text: assertStatus(args, apiState) }] };
+                case API_TOOL_NAMES.header:
+                    return { content: [{ type: 'text', text: assertHeader(args, apiState) }] };
+                case API_TOOL_NAMES.bodyContains:
+                    return { content: [{ type: 'text', text: assertBodyContains(args, apiState) }] };
+                case API_TOOL_NAMES.jsonField:
+                    return { content: [{ type: 'text', text: assertJsonField(args, apiState) }] };
+                default:
+                    // For browser context, delegate to Playwright MCP for browser_* tools
+                    if (isBrowserContext) {
+                        throw new Error(`Unknown tool: ${request.params.name}`);
+                    }
+                    throw new Error(`Unknown API tool: ${request.params.name}`);
+            }
+        } catch (error) {
+            return toolError(error.message);
+        }
+    });
+
+    let mcpServer = server;
+
+    // For browser context, also set up Playwright MCP and proxy browser_* tools to it
+    let playwrightMcpServer = null;
     if (isBrowserContext) {
-        // Browser context: use Playwright MCP
         const contextWithManagedLifecycle = Object.create(context);
         contextWithManagedLifecycle.close = async () => {};
 
-        mcpServer = await createConnection(
+        playwrightMcpServer = await createConnection(
             {
                 browser: {
                     browserName: 'chromium',
-                    isolated: true,
+                    isolated: false,
                     launchOptions: {},
                     contextOptions: {},
                 },
@@ -288,148 +428,51 @@ export async function createMcpHttpServer(context, options = {}) {
             },
             () => Promise.resolve(contextWithManagedLifecycle)
         );
-    } else {
-        // API context: create custom MCP server with API tools
-        const [{ Server }, { StreamableHTTPServerTransport }, { CallToolRequestSchema, ListToolsRequestSchema }] = await Promise.all([
-            import('@modelcontextprotocol/sdk/server/index.js').catch(() => {
-                throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
-            }),
-            import('@modelcontextprotocol/sdk/server/streamableHttp.js').catch(() => {
-                throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
-            }),
-            import('@modelcontextprotocol/sdk/types.js').catch(() => {
-                throw new Error('Missing optional dependency @modelcontextprotocol/sdk. Install it to use API mode.');
-            }),
-        ]);
-
-        apiState = buildApiState(context);
-
-        const server = new Server(
-            {
-                name: 'openqa-unified',
-                version: '0.0.10',
-            },
-            {
-                capabilities: {
-                    tools: {},
-                },
-            }
-        );
-
-        server.setRequestHandler(ListToolsRequestSchema, async () => ({
-            tools: [
-                {
-                    name: API_TOOL_NAMES.request,
-                    description: 'Send an HTTP request and store the response for later assertions.',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            method: { type: 'string', description: 'HTTP method such as GET, POST, PUT, PATCH, DELETE, HEAD, or OPTIONS' },
-                            url: { type: 'string', description: 'Absolute URL or relative path resolved against BASE_URL' },
-                            headers: {
-                                type: 'object',
-                                additionalProperties: true,
-                                description: 'Optional request headers',
-                            },
-                            query: {
-                                type: 'object',
-                                additionalProperties: true,
-                                description: 'Optional query parameters appended to the URL',
-                            },
-                            body: {
-                                description: 'Optional request body. Objects are sent as JSON.',
-                            },
-                            timeoutMs: { type: 'number', description: 'Optional request timeout in milliseconds' },
-                        },
-                        required: ['method', 'url'],
-                    },
-                },
-                {
-                    name: API_TOOL_NAMES.status,
-                    description: 'Assert the last API response status code.',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            expected: { type: 'number', description: 'Expected HTTP status code' },
-                        },
-                        required: ['expected'],
-                    },
-                },
-                {
-                    name: API_TOOL_NAMES.header,
-                    description: 'Assert the last API response includes a header with an exact value.',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            name: { type: 'string', description: 'Header name' },
-                            expected: { type: 'string', description: 'Expected header value' },
-                        },
-                        required: ['name', 'expected'],
-                    },
-                },
-                {
-                    name: API_TOOL_NAMES.bodyContains,
-                    description: 'Assert the last API response body contains text.',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            text: { type: 'string', description: 'Text that must be present in the response body' },
-                            caseSensitive: { type: 'boolean', description: 'Whether the text match should be case-sensitive' },
-                        },
-                        required: ['text'],
-                    },
-                },
-                {
-                    name: API_TOOL_NAMES.jsonField,
-                    description: 'Assert a JSON field in the last API response matches an expected value.',
-                    inputSchema: {
-                        type: 'object',
-                        properties: {
-                            path: { type: 'string', description: 'Dot path or array path such as data.user.id or items[0].name' },
-                            expected: { description: 'Expected JSON value' },
-                        },
-                        required: ['path', 'expected'],
-                    },
-                },
-            ],
-        }));
-
-        server.setRequestHandler(CallToolRequestSchema, async (request) => {
-            const args = request.params.arguments ?? {};
-
-            try {
-                switch (request.params.name) {
-                    case API_TOOL_NAMES.request:
-                        return await requestTool({
-                            method: args.method,
-                            url: args.url,
-                            headers: args.headers ?? {},
-                            query: args.query ?? {},
-                            body: args.body,
-                            timeoutMs: args.timeoutMs,
-                        }, apiState, baseUrl);
-                    case API_TOOL_NAMES.status:
-                        return { content: [{ type: 'text', text: assertStatus(args, apiState) }] };
-                    case API_TOOL_NAMES.header:
-                        return { content: [{ type: 'text', text: assertHeader(args, apiState) }] };
-                    case API_TOOL_NAMES.bodyContains:
-                        return { content: [{ type: 'text', text: assertBodyContains(args, apiState) }] };
-                    case API_TOOL_NAMES.jsonField:
-                        return { content: [{ type: 'text', text: assertJsonField(args, apiState) }] };
-                    default:
-                        throw new Error(`Unknown API tool: ${request.params.name}`);
-                }
-            } catch (error) {
-                return toolError(error.message);
-            }
-        });
-
-        mcpServer = server;
     }
 
-    // For browser context, we need to wrap with HTTP transport
-    // For API context, mcpServer is already the custom server
-    const { StreamableHTTPServerTransport } = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+    // Override CallToolRequestSchema handler to proxy browser_* tools to Playwright MCP
+    const originalCallToolHandler = mcpServer._requestHandlers.get(CallToolRequestSchema.shape.method.value);
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+        const toolName = request.params.name;
+
+        // Proxy browser_* tools to Playwright MCP
+        if (isBrowserContext && playwrightMcpServer && toolName.startsWith('browser_')) {
+            try {
+                const handler = playwrightMcpServer._requestHandlers.get(CallToolRequestSchema.shape.method.value);
+                if (handler) {
+                    return await handler(request);
+                }
+            } catch (error) {
+                return toolError(`Playwright MCP error: ${error.message}`);
+            }
+        }
+
+        // Otherwise use original handler (API tools)
+        return originalCallToolHandler(request);
+    });
+
+    // Also override ListToolsRequestSchema to include browser tools
+    const originalListToolsHandler = mcpServer._requestHandlers.get(ListToolsRequestSchema.shape.method.value);
+    server.setRequestHandler(ListToolsRequestSchema, async (request) => {
+        const apiResult = await originalListToolsHandler(request);
+
+        if (isBrowserContext && playwrightMcpServer) {
+            try {
+                const handler = playwrightMcpServer._requestHandlers.get(ListToolsRequestSchema.shape.method.value);
+                if (handler) {
+                    const browserResult = await handler(request);
+                    return {
+                        tools: [...apiResult.tools, ...browserResult.tools]
+                    };
+                }
+            } catch (error) {
+                console.error('Error getting browser tools:', error);
+            }
+        }
+
+        return apiResult;
+    });
+
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => randomUUID() });
     await mcpServer.connect(transport);
 
@@ -447,6 +490,9 @@ export async function createMcpHttpServer(context, options = {}) {
             httpServer.close();
             await transport.close().catch(() => {});
             await mcpServer.close().catch(() => {});
+            if (playwrightMcpServer) {
+                await playwrightMcpServer.close().catch(() => {});
+            }
         },
     };
 }
