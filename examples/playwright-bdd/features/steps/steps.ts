@@ -1,5 +1,5 @@
-import { runAgent, openCode } from 'iquest';
-import { aistep } from './fixtures';
+import { runAgent, openCode } from 'openqa';
+import { aistep, After } from './fixtures';
 
 const verbose = process.env.OPENQA_VERBOSE !== 'false';
 
@@ -23,8 +23,6 @@ aistep(/^(.*)$/, async ({ browser }, action: string) => {
 });
 
 // Clean up cached pages after each scenario
-import { After } from 'playwright-bdd';
-
 After(async () => {
     for (const page of pageCache.values()) {
         await page.close().catch(() => {});

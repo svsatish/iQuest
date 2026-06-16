@@ -271,9 +271,20 @@ export async function createMcpHttpServer(context, options = {}) {
 
         mcpServer = await createConnection(
             {
-                capabilities: ['core', 'testing'],
-                outputMode: 'file',
+                browser: {
+                    browserName: 'chromium',
+                    isolated: true,
+                    launchOptions: {},
+                    contextOptions: {},
+                },
+                capabilities: [],
+                console: { level: 'error' },
+                network: {},
+                server: {},
                 saveSession: true,
+                imageResponses: 'allow',
+                testIdAttribute: 'data-testid',
+                timeouts: { action: 5000, navigation: 60000 },
             },
             () => Promise.resolve(contextWithManagedLifecycle)
         );

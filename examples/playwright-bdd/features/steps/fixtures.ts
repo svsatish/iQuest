@@ -6,10 +6,9 @@ type Fixtures = {
 };
 
 export const test = base.extend<Fixtures>({
-  browser: async ({}, use) => {
-    // Uses Playwright's built-in browser fixture
-    // Browser is only launched when actually used
+  browser: async ({ browser }, use) => {
+    await use(browser);
   },
 });
 
-export const { Step: aistep } = createBdd(test);
+export const { Step: aistep, After } = createBdd(test);
