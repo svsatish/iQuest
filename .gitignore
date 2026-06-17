@@ -67,6 +67,7 @@ examples/playwright-bdd-remote/
 .claudesdk/
 .steeldevdocs/
 .openqa/
+.iquest/
 .playwright-mcp/
 conductor/
 .antigravitycli

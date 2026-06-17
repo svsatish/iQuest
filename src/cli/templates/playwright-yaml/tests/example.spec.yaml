@@ -7,5 +7,5 @@ tests:
     context: browser
     steps:
       - Navigate to the TodoMVC https://demo.playwright.dev/todomvc/ page
-      - Add a new todo item "Learn OpenQA"
-      - Verify that "Learn OpenQA" appears in the todo list
+      - Add a new todo item "Learn iQuest"
+      - Verify that "Learn iQuest" appears in the todo list

@@ -4,7 +4,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 ## Project Overview
 
-OpenQA is an agent harness for browser test automation — write tests in plain English, let the agent navigate a real browser. The same agent that builds your product can verify it. It integrates with Playwright-BDD, Cucumber.js, and YAML-based test definitions.
+iQuest is an agent harness for browser test automation — write tests in plain English, let the agent navigate a real browser. The same agent that builds your product can verify it. It integrates with Playwright-BDD, Cucumber.js, and YAML-based test definitions.
 
 **Key architecture:** Uses a **unified SDK architecture** — both `Codex` and `openCode` providers expose Playwright MCP over HTTP/SSE and implement a single `provider.run()` interface. The Orchestrator is a thin coordinator (~50 lines) that wires MCP to the provider.
 
@@ -24,11 +24,11 @@ cd examples/playwright-yaml && npm test
 node src/cli/bin.js init
 
 # Generate Playwright tests from YAML
-npx openqa generate [paths...]
-npx openqa generate --watch  # Watch mode
+npx @vsaripella/iquest generate [paths...]
+npx @vsaripella/iquest generate --watch  # Watch mode
 
 # Test with local file link (before publishing)
-cd .openqa && npm install file:..
+cd .iquest && npm install file:..
 ```
 
 ### Publishing & Release
@@ -89,8 +89,8 @@ runAgent(provider, prompt, page/context)
 
 ### CLI System (`src/cli/`)
 
-- `openqa init` — Interactive wizard: Agent → Model → Framework → Feature path. Scaffolds `.openqa/`, installs the chosen agent SDK + varlock, optionally installs Playwright browsers. Shows spinner progress during file creation.
-- `openqa generate [paths...]` — Converts YAML test files to Playwright `.spec.js`.
+- `iquest init` — Interactive wizard: Agent → Model → Framework → Feature path. Scaffolds `.iquest/`, installs the chosen agent SDK + varlock, optionally installs Playwright browsers. Shows spinner progress during file creation.
+- `iquest generate [paths...]` — Converts YAML test files to Playwright `.spec.js`.
 
 Templates at `src/cli/templates/<framework>/`. Each template includes `.env.schema` (varlock schema, committed) and `.env.example` (copy-to-.env guide).
 
@@ -132,15 +132,15 @@ if (pageOrContext.context && typeof pageOrContext.context === 'function') {
 
 ### Environment Variable Loading
 
-**Scaffolded `.openqa/` projects** use [varlock](https://varlock.dev) (Node.js 22+ required). `varlock run --` in npm scripts pre-injects validated env vars before the test process starts. The `.env.schema` file documents all variables with types and descriptions; secrets are redacted from logs automatically. Schema header format:
+**Scaffolded `.iquest/` projects** use [varlock](https://varlock.dev) (Node.js 22+ required). `varlock run --` in npm scripts pre-injects validated env vars before the test process starts. The `.env.schema` file documents all variables with types and descriptions; secrets are redacted from logs automatically. Schema header format:
 ```
 # @defaultSensitive=true @defaultRequired=false
 # @generateTypes(lang=ts, path=env.d.ts)
 # ---
 ```
 
-**openqa library itself** (`src/index.js`) uses dotenv directly — no varlock dependency:
-1. `.openqa/.env` — loaded by dotenv (cwd when tests run from `.openqa/`)
+**iQuest library itself** (`src/index.js`) uses dotenv directly — no varlock dependency:
+1. `.iquest/.env` — loaded by dotenv (cwd when tests run from `.iquest/`)
 2. Parent project `.env` (`../.env`) — fallback for monorepo setups
 3. Shell environment — `ANTHROPIC_API_KEY` (Codex) or the relevant provider key (openCode)
 
@@ -155,17 +155,17 @@ The step definition uses `/^(.*)$/` to match any step text. Both `Given`/`When`/
 ## Examples Directory
 
 - `playwright-bdd/` — Playwright-BDD with `.feature` files
-- `playwright-yaml/` — YAML-based tests via `npx openqa generate`
+- `playwright-yaml/` — YAML-based tests via `npx @vsaripella/iquest generate`
 - `cucumberjs/` — Cucumber.js integration
 
-All examples use `"openqa": "file:../.."` for local development and require the relevant agent SDK installed alongside (e.g. `npm install @anthropic-ai/Codex-agent-sdk`).
+All examples use `"@vsaripella/iquest": "file:../.."` for local development and require the relevant agent SDK installed alongside (e.g. `npm install @anthropic-ai/Codex-agent-sdk`).
 
 ## Testing Strategy
 
 Before any release:
 1. `cd examples/playwright-bdd && npm test`
 2. `node src/cli/bin.js init` in a temp directory
-3. `cd .openqa && npm install file:..`
+3. `cd .iquest && npm install file:..`
 4. Verify `npm pack` includes only `src/`, `README.md`, `LICENSE`
 
 ## Module System

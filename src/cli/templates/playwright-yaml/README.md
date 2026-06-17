@@ -76,7 +76,7 @@ npm test
 npm run test:ui
 
 # Run specific test file
-npx iquest generate tests/login.spec.yaml && playwright test .tests-gen/login.spec.js
+npx @vsaripella/iquest generate tests/login.spec.yaml && playwright test .tests-gen/login.spec.js
 ```
 
 ### Git

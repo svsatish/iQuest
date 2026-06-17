@@ -67,7 +67,7 @@ The key innovation is using a **single generic step** that handles ALL steps wit
 ```javascript
 import { defineStep, Before, After } from '@cucumber/cucumber';
 import { chromium } from 'playwright';
-import { runAgent, claudeCode } from 'iquest';
+import { runAgent, claudeCode } from '@vsaripella/iquest';
 
 Before(async function () {
   browser = await chromium.launch({ headless: true });

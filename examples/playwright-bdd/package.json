@@ -1,7 +1,7 @@
 {
   "name": "playwright-bdd-example",
   "version": "1.0.1",
-  "description": "Example using openqa with Playwright BDD tests",
+  "description": "Example using iQuest with Playwright BDD tests",
   "type": "module",
   "scripts": {
     "bddgen": "bddgen",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.126",
-    "openqa": "file:../.."
+    "@vsaripella/iquest": "file:../.."
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

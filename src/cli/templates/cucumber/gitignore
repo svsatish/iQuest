@@ -13,7 +13,7 @@ playwright/.cache/
 # Playwright YAML generated files
 .tests-gen/
 
-# OpenQA & BDD generated files
+# iQuest & BDD generated files
 .playwright-mcp/
 .features-gen/
 cucumber-report/

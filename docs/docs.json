@@ -1,7 +1,7 @@
 {
     "$schema": "https://mintlify.com/docs.json",
     "theme": "mint",
-    "name": "OpenQA",
+    "name": "iQuest",
     "description": "Agent Harness for Browser Test Automation",
     "colors": {
         "primary": "#EB521E",
@@ -38,8 +38,8 @@
     "navbar": {
         "links": [
             {
-                "label": "openqa.io",
-                "href": "https://openqa.io"
+                "label": "iquest.dev",
+                "href": "https://svsatish.github.io/iQuest"
             },
             {
                 "label": "GitHub",
@@ -47,7 +47,7 @@
             },
             {
                 "label": "npm",
-                "href": "https://www.npmjs.com/package/iquest"
+                "href": "https://www.npmjs.com/package/@vsaripella/iquest"
             }
         ],
         "primary": {

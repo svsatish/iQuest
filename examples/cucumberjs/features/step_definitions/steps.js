@@ -1,6 +1,6 @@
 import { defineStep, Before, After, setDefaultTimeout } from '@cucumber/cucumber';
 import { chromium, Browser } from 'playwright';
-import { runAgent, claudeCode } from 'iquest';
+import { runAgent, claudeCode } from '@vsaripella/iquest';
 
 // Set default timeout to 3 minutes for AI agent steps
 setDefaultTimeout(180000);

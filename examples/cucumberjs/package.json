@@ -1,7 +1,7 @@
 {
   "name": "cucumberjs-example",
   "version": "1.0.0",
-  "description": "Example using autobrowse-agent with CucumberJS and Playwright",
+  "description": "Example using iQuest with CucumberJS and Playwright",
   "type": "module",
   "scripts": {
     "test": "cucumber-js",
@@ -9,7 +9,7 @@
     "test:report": "cucumber-js --format html:reports/cucumber-report.html"
   },
   "dependencies": {
-    "openqa": "file:../.."
+    "@vsaripella/iquest": "file:../.."
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.0.1",

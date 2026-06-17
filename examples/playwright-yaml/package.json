@@ -1,17 +1,17 @@
 {
   "name": "playwright-yaml-example",
   "version": "1.0.0",
-  "description": "Example using OpenQA with YAML-based Playwright tests",
+  "description": "Example using iQuest with YAML-based Playwright tests",
   "type": "module",
   "scripts": {
-    "generate": "npx openqa generate",
+    "generate": "npx @vsaripella/iquest generate",
     "test": "playwright test",
-    "test:ui": "npx openqa generate && playwright test --ui",
-    "test:headed": "npx openqa generate && playwright test --headed",
+    "test:ui": "npx @vsaripella/iquest generate && playwright test --ui",
+    "test:headed": "npx @vsaripella/iquest generate && playwright test --headed",
     "test:report": "playwright show-report"
   },
   "dependencies": {
-    "openqa": "file:../.."
+    "@vsaripella/iquest": "file:../.."
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0"

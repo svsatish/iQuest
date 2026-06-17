@@ -70,7 +70,7 @@ Feature: Playwright Home Page
 The key innovation is using a **single generic AI step** that handles ALL steps:
 
 ```typescript
-import { runAgent, claudeCode } from 'iquest';
+import { runAgent, claudeCode } from '@vsaripella/iquest';
 import { aistep } from './fixtures';
 
 // Generic AI-powered step - handles ANY step with natural language

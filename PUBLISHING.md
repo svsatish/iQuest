@@ -4,7 +4,7 @@
 
 1. **Check package name availability:**
    ```bash
-   npm search openqa
+   npm search @vsaripella/iquest
    ```
    If "iquest" is taken, you'll need to use a scoped name like `@svsatish/iquest`
 
@@ -18,25 +18,25 @@
 ### Option 1: Test with npm pack
 
 ```bash
-# In openqa repo
+# In iQuest repo
 npm pack
-# Creates: openqa-0.0.1.tgz
+# Creates: @vsaripella/iquest-0.0.1.tgz
 
 # In test project
-npm install /path/to/openqa-0.0.1.tgz
+npm install /path/to/@vsaripella/iquest-0.0.1.tgz
 npm install playwright-bdd @playwright/test
-npx openqa init playwright-bdd
+npx @vsaripella/iquest init
 ```
 
 ### Option 2: Publish Beta Version
 
 ```bash
-# In openqa repo
+# In iQuest repo
 npm version 0.0.2-beta.0
 npm publish --tag beta
 
 # In test project
-npm install openqa@beta
+npm install @vsaripella/iquest@beta
 ```
 
 ## Publishing to npm
@@ -83,7 +83,7 @@ Before publishing, ensure:
 
 1. ✅ All tests pass
 2. ✅ Tested with `npm link` or `npm pack`
-3. ✅ CLI tool works: `npx openqa init playwright-bdd`
+3. ✅ CLI tool works: `npx @vsaripella/iquest init`
 4. ✅ README is up to date
 5. ✅ Branch merged to main
 6. ✅ Version bumped appropriately
@@ -125,6 +125,6 @@ When releasing new versions:
 ## Verify Publication
 
 After publishing, verify:
-- npm package: https://www.npmjs.com/package/openqa
+- npm package: https://www.npmjs.com/package/@vsaripella/iquest
 - GitHub release: https://github.com/svsatish/iQuest/releases
-- Installation works: `npm install openqa` in a test project
+- Installation works: `npm install @vsaripella/iquest` in a test project

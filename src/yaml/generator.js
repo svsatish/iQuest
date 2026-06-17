@@ -30,7 +30,7 @@ export function generateTest(yamlContent, sourceFile = 'test.yaml', yamlFilePath
   // Header comment
   code += `// Auto-generated from ${sourceFile}\n`;
   code += `// DO NOT EDIT - changes will be overwritten on next generate\n`;
-  code += `// Edit the YAML file instead and run: npx openqa generate\n\n`;
+  code += `// Edit the YAML file instead and run: npx @vsaripella/iquest generate\n\n`;
 
   // Imports
   const hasApiTests = spec.tests?.some(t => t.context === 'api') || spec.defaultContext === 'api';

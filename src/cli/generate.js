@@ -1,5 +1,5 @@
 /**
- * OpenQA Generate Command
+ * iQuest Generate Command
  *
  * Generates Playwright .spec.js files from YAML test definitions.
  */
@@ -23,7 +23,7 @@ export async function generate(paths, options = {}) {
   const verbose = options.verbose !== false;
 
   if (verbose) {
-    console.log(chalk.bold.cyan('\n🤖 OpenQA Test Generator\n'));
+    console.log(chalk.bold.cyan('\n🤖 iQuest Test Generator\n'));
   }
 
   // Resolve paths

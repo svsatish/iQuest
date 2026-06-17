@@ -1,6 +1,6 @@
 {
   "name": "@vsaripella/iquest",
-  "version": "0.0.26",
+  "version": "1.0.0",
   "description": "iQuest Agentic Test Harness — AI-powered browser and API test automation. Write tests in plain English. Discover. Validate. Assure.",
   "type": "module",
   "bin": {
