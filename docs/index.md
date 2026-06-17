@@ -63,6 +63,8 @@ npm run test:headed
 
 That's it. No step definitions. No selectors. No code.
 
+> **Node.js requirement:** Scaffolded projects require **Node 22+** (for varlock env validation). The iQuest library itself works on **Node 18+**. We recommend Node 22 LTS.
+
 ## Quick Links
 
 - [Quickstart](/quickstart) — Set up in 2 minutes

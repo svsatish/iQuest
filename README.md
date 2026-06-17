@@ -10,7 +10,10 @@ AI-powered browser and API test automation. Write tests in plain English — the
 
 ## Quick Start
 
-**Prerequisites** — log in with [Claude Code](https://claude.ai/code) or [opencode](https://opencode.ai) using your model provider (Anthropic, GitHub Copilot, Google Gemini, OpenAI, Amazon Bedrock, and more). No API key needed locally.
+**Prerequisites:**
+- Node.js **18+** (for the iQuest library)
+- Node.js **22+** (for scaffolded `.iquest/` projects — required by [varlock](https://varlock.dev) for environment variable validation)
+- One-time login with [Claude Code](https://claude.ai/code) or [opencode](https://opencode.ai) — no API key needed for local development
 
 **1. Scaffold the harness:**
 ```bash
@@ -35,6 +38,20 @@ cd .iquest && npm test
 No step definitions. No selectors. No code.
 
 For hybrid UI + API projects, `iquest init` scaffolds a feature-file starter in `.iquest/` that can mix both kinds of steps in the same scenario.
+
+---
+
+## Node.js Version Compatibility
+
+| Usage | Minimum Node Version | Notes |
+|-------|---------------------|-------|
+| **iQuest library** (`import { runAgent } from 'iquest'`) | **18+** | Core library works on Node 18+ |
+| **Scaffolded `.iquest/` project** (`npx iquest init`) | **22+** | Required by [varlock](https://varlock.dev) for `.env.schema` validation and type generation |
+| **Playwright + Playwright-BDD** | **18+** | Standard Playwright requirement |
+
+**If you're on Node 26+:** The library is compatible. For scaffolded projects, varlock (used for env validation) may show deprecation warnings — these don't affect functionality. We recommend Node 22 LTS for the smoothest experience.
+
+> **Tip:** Use a version manager like `nvm`, `fnm`, or `volta` to switch Node versions per project.
 
 ---
 

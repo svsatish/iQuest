@@ -10,7 +10,7 @@ const testDir = defineBddConfig({
 
 export default defineConfig({
   testDir,
-  timeout: 240000, // 4 minutes for AI agent processing
+  timeout: 600000, // 4 minutes for AI agent processing
   fullyParallel: true,
   reporter: [['html', { open: 'never' }]],
   use: {

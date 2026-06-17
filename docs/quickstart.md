@@ -8,6 +8,18 @@ npx iquest init
 
 The interactive wizard asks 4 questions — then everything is set up automatically.
 
+## Node.js Version Requirements
+
+| Usage | Minimum Node Version | Notes |
+|-------|---------------------|-------|
+| **iQuest library** (`import { runAgent } from 'iquest'`) | **18+** | Core library works on Node 18+ |
+| **Scaffolded `.iquest/` project** (`npx iquest init`) | **22+** | Required by [varlock](https://varlock.dev) for `.env.schema` validation and type generation |
+| **Playwright + Playwright-BDD** | **18+** | Standard Playwright requirement |
+
+> **If you're on Node 26+:** The library is compatible. For scaffolded projects, varlock (used for env validation) may show deprecation warnings — these don't affect functionality. We recommend Node 22 LTS for the smoothest experience.
+
+> **Tip:** Use a version manager like `nvm`, `fnm`, or `volta` to switch Node versions per project.
+
 ---
 
 ## Step 1: Choose your agent
